@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -31,11 +32,15 @@ public class MarketInterface implements Screen {
     double secondFraction;
     Label prices;
     HashMap<String, Color> colorLookup;
+    int scale;
+    ArrayList<GraphPoint> priceDots;
 
     public MarketInterface (final MarketGUI marketGUI){
         this.marketGUI = marketGUI;
         frame = 0;
-        secondFraction = 0.1;
+        secondFraction = 0.0167;
+        scale = 3;
+        priceDots = new ArrayList<GraphPoint>();
 
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
@@ -67,6 +72,23 @@ public class MarketInterface implements Screen {
         });
         stage.addActor(menuButton);
 
+        Button printButton = new TextButton("Print", firstSkin);
+        printButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
+                marketGUI.worldHeight - 2* marketGUI.standardButtonHeight);
+        printButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        printButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                System.out.println(priceDots.size());
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(printButton);
+
+
 
         // instantiate market
         MarketInfo fish = new MarketInfo("Fish", 0.35, -0.5, 0.7,
@@ -83,7 +105,7 @@ public class MarketInterface implements Screen {
         currentMarketProfile.add(grain);
         currentMarketProfile.add(metal);
 
-        int numberOfAgents = 5000;
+        int numberOfAgents = 2000;
         ArrayList<Agent> marketAgents = new ArrayList<Agent>();
         marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
 
@@ -108,43 +130,64 @@ public class MarketInterface implements Screen {
         frame += 1;
         // use second fraction to determine how often to call run market
         if (frame % ((int) (secondFraction * 60)) == 0) {
-            System.out.println(frame);
+            // System.out.println(frame);
             try {
                 runMarket(market, frame);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        }
-        int scale = 5;
+            graphPrices();
+            removeGraphDots(200, priceDots);
 
+            if (frame % 100 == 0){
+                System.out.println(priceDots.size());
+            }
+
+            prices.setText(market.getPrices().toString());
+
+        }
+
+        stage.act(delta);
+        stage.draw();
+
+
+    }
+
+    public void graphPrices(){
         // access and store all current prices, adjusted to scale with the size of the graph
         HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
         for (Price p : market.getPrices()){
             priceCoordinates.put(p.getGood(), (int) p.getCost() * scale);
         }
+        // for each price coordinate pair, lookup the appropriate color, make a dot on the graph, then set it to scroll
+        // off to the left of the screen
         for (Map.Entry<String, Integer> priceCoord : priceCoordinates.entrySet()){
             // find color
             Color dotColor = colorLookup.get(priceCoord.getKey());
             // make dot
-            GraphPoint dot = new GraphPoint(700, priceCoord.getValue(), 5, 5, dotColor);
+            GraphPoint dot = new GraphPoint(1400, priceCoord.getValue(), 2, 2, dotColor);
 
             // make actor leave screen
             MoveToAction leaveScreen = new MoveToAction();
-            leaveScreen.setPosition(0, priceCoord.getValue());
-            leaveScreen.setDuration(100);
+            leaveScreen.setPosition(-10, priceCoord.getValue());
+            leaveScreen.setDuration(50);
             dot.addAction(leaveScreen);
+            priceDots.add(dot);
 
             stage.addActor(dot);
 
         }
-        GraphPoint testDot = new GraphPoint(100, 100, 5, 5, new Color(0, 0, 0,1));
-        stage.addActor(testDot);
 
+    }
 
-        prices.setText(market.getPrices().toString());
-        stage.act(delta);
-        stage.draw();
-
+    public void removeGraphDots(int xThreshold, ArrayList<GraphPoint> dots){
+        ArrayList<Integer> removed = new ArrayList<Integer>();
+        for (int i = 0; i < dots.size(); i++){
+            if (dots.get(i).getX() < xThreshold){
+                dots.get(i).remove();
+                dots.remove(i);
+            }
+        }
     }
 
     @Override
