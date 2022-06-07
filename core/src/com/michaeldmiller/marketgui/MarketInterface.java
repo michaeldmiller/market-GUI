@@ -2,9 +2,11 @@ package com.michaeldmiller.marketgui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -15,6 +17,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.michaeldmiller.economicagents.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.michaeldmiller.economicagents.MarketMain.*;
 
@@ -24,11 +28,25 @@ public class MarketInterface implements Screen {
     Stage stage;
     Market market;
     int frame;
+    double secondFraction;
     Label prices;
+    HashMap<String, Color> colorLookup;
 
     public MarketInterface (final MarketGUI marketGUI){
         this.marketGUI = marketGUI;
         frame = 0;
+        secondFraction = 0.1;
+
+        // setup color lookup table
+        colorLookup = new HashMap<String, Color>();
+        colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
+        colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
+        colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
+        colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+
+
+
+
         stage = new Stage(new FitViewport(marketGUI.worldWidth, marketGUI.worldHeight));
 
         Skin firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
@@ -87,11 +105,42 @@ public class MarketInterface implements Screen {
     public void render(float delta) {
         ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
         Gdx.input.setInputProcessor(stage);
-        try {
-            runMarket(market, frame);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        frame += 1;
+        // use second fraction to determine how often to call run market
+        if (frame % ((int) (secondFraction * 60)) == 0) {
+            System.out.println(frame);
+            try {
+                runMarket(market, frame);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
+        int scale = 5;
+
+        // access and store all current prices, adjusted to scale with the size of the graph
+        HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
+        for (Price p : market.getPrices()){
+            priceCoordinates.put(p.getGood(), (int) p.getCost() * scale);
+        }
+        for (Map.Entry<String, Integer> priceCoord : priceCoordinates.entrySet()){
+            // find color
+            Color dotColor = colorLookup.get(priceCoord.getKey());
+            // make dot
+            GraphPoint dot = new GraphPoint(700, priceCoord.getValue(), 5, 5, dotColor);
+
+            // make actor leave screen
+            MoveToAction leaveScreen = new MoveToAction();
+            leaveScreen.setPosition(0, priceCoord.getValue());
+            leaveScreen.setDuration(100);
+            dot.addAction(leaveScreen);
+
+            stage.addActor(dot);
+
+        }
+        GraphPoint testDot = new GraphPoint(100, 100, 5, 5, new Color(0, 0, 0,1));
+        stage.addActor(testDot);
+
+
         prices.setText(market.getPrices().toString());
         stage.act(delta);
         stage.draw();
