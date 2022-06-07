@@ -4,7 +4,7 @@ public class Price {
     private String good;
     private double cost;
     private double equilibriumCost;
-    private final double originalCost;
+    private double originalCost;
 
     public Price(String good, double cost, double equilibriumCost, double originalCost) {
         this.good = good;
@@ -39,6 +39,9 @@ public class Price {
 
     public void setEquilibriumCost(double newEquilibriumCost) {
         equilibriumCost = newEquilibriumCost;
+    }
+    public void setOriginalCost(double newOriginalCost){
+        originalCost = newOriginalCost;
     }
 
     public String toString() {
