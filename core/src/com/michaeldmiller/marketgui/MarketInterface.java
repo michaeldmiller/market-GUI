@@ -174,13 +174,13 @@ public class MarketInterface implements Screen {
     }
 
     public void makeAdjustmentFields(){
-        goodField = new TextField("", firstSkin);
-        goodField.setPosition(marketGUI.worldWidth - 2 * marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 3* marketGUI.standardButtonHeight);
+        goodField = new TextField("Good", firstSkin);
+        goodField.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
+                marketGUI.worldHeight - (int) (2.5 * marketGUI.standardButtonHeight));
         stage.addActor(goodField);
-        costField = new TextField("", firstSkin);
+        costField = new TextField("New Cost", firstSkin);
         costField.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 3* marketGUI.standardButtonHeight);
+                marketGUI.worldHeight - 3 * marketGUI.standardButtonHeight);
         stage.addActor(costField);
 
         Button changeCostButton = new TextButton("Update Cost", firstSkin);
@@ -201,13 +201,11 @@ public class MarketInterface implements Screen {
 
         errorLabel = new Label ("Errors Here", firstSkin);
         errorLabel.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 5* marketGUI.standardButtonHeight);
+                marketGUI.worldHeight - (int) (4.5 * marketGUI.standardButtonHeight));
         stage.addActor(errorLabel);
 
-
-
-
     }
+
     public void changePrice(){
         // given information in good and cost text fields, attempt to change the corresponding cost in the market
         boolean costOK = false;
@@ -235,8 +233,11 @@ public class MarketInterface implements Screen {
     }
 
     public void removeGraphDots(int xThreshold, ArrayList<GraphPoint> dots){
+        // given the list of graph points
         for (int i = 0; i < dots.size(); i++){
-            if (dots.get(i).getX() < xThreshold){
+            // if the x coordinate of the dot is at or has surpassed the threshold (moving right to left)
+            // remove the dot from the stage and the list of dots
+            if (dots.get(i).getX() <= xThreshold){
                 dots.get(i).remove();
                 dots.remove(i);
             }
@@ -244,8 +245,9 @@ public class MarketInterface implements Screen {
     }
 
     public void removeGraphLabels(int xThreshold, ArrayList<Label> labels){
+        // essentially identical to removeGraphDots but for Labels, may be redundant
         for (int i = 0; i < labels.size(); i++){
-            if (labels.get(i).getX() < xThreshold){
+            if (labels.get(i).getX() <= xThreshold){
                 labels.get(i).remove();
                 labels.remove(i);
             }
@@ -271,19 +273,30 @@ public class MarketInterface implements Screen {
             leaveScreen.setPosition(priceX - 10, priceY + priceCoord.getValue());
             leaveScreen.setDuration(50);
             dot.addAction(leaveScreen);
+            // add actor to list of price dots
             priceDots.add(dot);
 
             stage.addActor(dot);
 
         }
-
     }
 
     public void makePriceGraph(){
+        // using GraphPoints as they are general rectangles and are suited to the task
+        // add x-axis
         GraphPoint xAxis = new GraphPoint(priceX, priceY, priceWidth, 3, new Color (0, 0, 0, 1));
         stage.addActor(xAxis);
+        // add y-axis
         GraphPoint yAxis = new GraphPoint(priceX, priceY, 3, priceHeight, new Color (0, 0, 0, 1));
         stage.addActor(yAxis);
+        // add x-ceiling
+        GraphPoint xCeiling = new GraphPoint(priceX, priceY + priceHeight,
+                priceWidth, 2, new Color (0, 0, 0, 1));
+        stage.addActor(xCeiling);
+        // add y-ceiling
+        GraphPoint yCeiling = new GraphPoint(priceX + priceWidth, priceY,
+                2, priceHeight, new Color (0, 0, 0, 1));
+        stage.addActor(yCeiling);
 
     }
 
@@ -292,16 +305,53 @@ public class MarketInterface implements Screen {
             Label timeLabel = new Label(String.valueOf(frame), firstSkin);
             timeLabel.setPosition(priceX + priceWidth, priceY - 20);
 
+            // add action for the labels to move to the left, following the dots
+            // it is important that the duration for dot movement and label movement be the same
             MoveToAction leaveScreen = new MoveToAction();
             leaveScreen.setPosition(priceX - 10, priceY - 20);
             leaveScreen.setDuration(50);
             timeLabel.addAction(leaveScreen);
+            // add labels to price label list for later removal
             priceLabels.add(timeLabel);
 
             stage.addActor(timeLabel);
         }
-    }
 
+        if (frame == 1){
+            // set range of prices to be covered in the graph
+            int priceMax = priceHeight/scale;
+            int labelNum = 1;
+
+            for (int i = priceX; i < (priceHeight + priceX); i++) {
+                // split price height into 10 sections
+                if (i % priceHeight / 10 == 0){
+                    // set label value to tenth of priceMax * labelNum, set position at labelNum * 1/10th of the way
+                    // up the graph
+                    Label quantityLabel = new Label(String.valueOf(priceMax / 10 * labelNum), firstSkin);
+                    quantityLabel.setPosition(priceX + priceWidth - 20, priceY +  ((int) (priceHeight / 10) * labelNum) - 10);
+
+                    // add action for the labels to move to the left, following the dots. Unlike dots and tick number
+                    // labels, the price labels will not be deleted upon reaching their resting place on the y-axis
+                    // it is again important that the duration for dot movement and label movement be the same
+                    MoveToAction leaveScreen = new MoveToAction();
+                    leaveScreen.setPosition(priceX - 25, priceY + ((int) (priceHeight / 10) * labelNum) - 10);
+                    leaveScreen.setDuration(50);
+                    quantityLabel.addAction(leaveScreen);
+
+                    stage.addActor(quantityLabel);
+
+                    // add horizontal guides
+                    GraphPoint xGuide = new GraphPoint(priceX, priceY + ((int) (priceHeight / 10) * labelNum),
+                            priceWidth, 1, new Color (0, 0, 0, 1));
+                    stage.addActor(xGuide);
+                    labelNum += 1;
+
+
+
+                }
+            }
+        }
+    }
 
 
     @Override
