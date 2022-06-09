@@ -1,17 +1,13 @@
-package com.michaeldmiller.marketgui;
+package com.michaeldmiller.marketUI;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 
-public class MarketGUI extends Game {
+public class MarketUI extends Game {
 	SpriteBatch batch;
 	public Screen mainMenu;
-	public Screen marketInterface;
+	public Screen mainInterface;
 	public Screen creditsScreen;
 	public int worldWidth;
 	public int worldHeight;
@@ -27,7 +23,7 @@ public class MarketGUI extends Game {
 
 
 		mainMenu = new MainMenu(this);
-		marketInterface = new MarketInterface(this);
+		mainInterface = new MainInterface(this);
 		creditsScreen = new CreditsScreen(this);
 
 		setScreen(mainMenu);

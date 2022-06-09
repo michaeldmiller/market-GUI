@@ -1,4 +1,4 @@
-package com.michaeldmiller.marketgui;
+package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -13,23 +13,23 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 public class MainMenu implements Screen {
 
-    final MarketGUI marketGUI;
+    final MarketUI marketUI;
     Stage stage;
 
 
-    public MainMenu (final MarketGUI marketGUI){
-        this.marketGUI = marketGUI;
-        stage = new Stage(new FitViewport(marketGUI.worldWidth, marketGUI.worldHeight));
+    public MainMenu (final MarketUI marketUI){
+        this.marketUI = marketUI;
+        stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
         Skin firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         Button startButton = new TextButton("Start", firstSkin);
-        startButton.setPosition((int) ((marketGUI.worldWidth/2) - (marketGUI.standardButtonWidth/2)),
-                (int) ((marketGUI.worldHeight/2) - (marketGUI.standardButtonHeight/2)));
-        startButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        startButton.setPosition((int) ((marketUI.worldWidth/2) - (marketUI.standardButtonWidth/2)),
+                (int) ((marketUI.worldHeight/2) - (marketUI.standardButtonHeight/2)));
+        startButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         startButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketGUI.setScreen(marketGUI.marketInterface);
+                marketUI.setScreen(marketUI.mainInterface);
                 dispose();
             }
             @Override
@@ -40,13 +40,13 @@ public class MainMenu implements Screen {
         stage.addActor(startButton);
 
         Button creditsButton = new TextButton("Credits", firstSkin);
-        creditsButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
+        creditsButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
                 0);
-        creditsButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        creditsButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         creditsButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketGUI.setScreen(marketGUI.creditsScreen);
+                marketUI.setScreen(marketUI.creditsScreen);
                 dispose();
             }
             @Override

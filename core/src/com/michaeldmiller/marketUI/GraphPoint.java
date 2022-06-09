@@ -1,4 +1,4 @@
-package com.michaeldmiller.marketgui;
+package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;

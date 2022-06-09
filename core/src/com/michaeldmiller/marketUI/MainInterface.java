@@ -1,4 +1,4 @@
-package com.michaeldmiller.marketgui;
+package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -20,9 +19,9 @@ import java.util.Map;
 
 import static com.michaeldmiller.economicagents.MarketMain.*;
 
-public class MarketInterface implements Screen {
+public class MainInterface implements Screen {
 
-    final MarketGUI marketGUI;
+    final MarketUI marketUI;
     Stage stage;
     Skin firstSkin;
     Market market;
@@ -44,16 +43,16 @@ public class MarketInterface implements Screen {
 
 
 
-    public MarketInterface (final MarketGUI marketGUI) {
-        this.marketGUI = marketGUI;
+    public MainInterface (final MarketUI marketUI) {
+        this.marketUI = marketUI;
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
         scale = 3;
-        priceX = (int) (0.1 * marketGUI.worldWidth);
-        priceY = (int) (0.1 * marketGUI.worldHeight);
-        priceWidth = (int) (0.6 * marketGUI.worldWidth);
-        priceHeight = (int) (0.6 * marketGUI.worldHeight);
+        priceX = (int) (0.05 * marketUI.worldWidth);
+        priceY = (int) (0.1 * marketUI.worldHeight);
+        priceWidth = (int) (0.65 * marketUI.worldWidth);
+        priceHeight = (int) (0.7 * marketUI.worldHeight);
         priceDots = new ArrayList<GraphPoint>();
         priceLabels = new ArrayList<Label>();
 
@@ -64,7 +63,7 @@ public class MarketInterface implements Screen {
         colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
         colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
 
-        stage = new Stage(new FitViewport(marketGUI.worldWidth, marketGUI.worldHeight));
+        stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
         // add buttons
         addButtons();
@@ -112,13 +111,13 @@ public class MarketInterface implements Screen {
 
     public void addButtons(){
         Button menuButton = new TextButton("Menu", firstSkin);
-        menuButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - marketGUI.standardButtonHeight);
-        menuButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        menuButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - marketUI.standardButtonHeight);
+        menuButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         menuButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketGUI.setScreen(marketGUI.mainMenu);
+                marketUI.setScreen(marketUI.mainMenu);
                 dispose();
             }
             @Override
@@ -129,9 +128,9 @@ public class MarketInterface implements Screen {
         stage.addActor(menuButton);
 
         Button printButton = new TextButton("Print", firstSkin);
-        printButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 2* marketGUI.standardButtonHeight);
-        printButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        printButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 2* marketUI.standardButtonHeight);
+        printButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         printButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
@@ -168,25 +167,25 @@ public class MarketInterface implements Screen {
         market = makeMarket(currentMarketProfile, marketAgents);
 
         prices = new Label ("Prices", firstSkin);
-        prices.setPosition(100, marketGUI.worldHeight - 50);
+        prices.setPosition(100, marketUI.worldHeight - 50);
         stage.addActor(prices);
 
     }
 
     public void makeAdjustmentFields(){
         goodField = new TextField("Good", firstSkin);
-        goodField.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - (int) (2.5 * marketGUI.standardButtonHeight));
+        goodField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (2.5 * marketUI.standardButtonHeight));
         stage.addActor(goodField);
         costField = new TextField("New Cost", firstSkin);
-        costField.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 3 * marketGUI.standardButtonHeight);
+        costField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 3 * marketUI.standardButtonHeight);
         stage.addActor(costField);
 
         Button changeCostButton = new TextButton("Update Cost", firstSkin);
-        changeCostButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - 4* marketGUI.standardButtonHeight);
-        changeCostButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        changeCostButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 4* marketUI.standardButtonHeight);
+        changeCostButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         changeCostButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
@@ -200,8 +199,8 @@ public class MarketInterface implements Screen {
         stage.addActor(changeCostButton);
 
         errorLabel = new Label ("Errors Here", firstSkin);
-        errorLabel.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - (int) (4.5 * marketGUI.standardButtonHeight));
+        errorLabel.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (4.5 * marketUI.standardButtonHeight));
         stage.addActor(errorLabel);
 
     }
@@ -235,9 +234,9 @@ public class MarketInterface implements Screen {
     public void removeGraphDots(int xThreshold, ArrayList<GraphPoint> dots){
         // given the list of graph points
         for (int i = 0; i < dots.size(); i++){
-            // if the x coordinate of the dot is at or has surpassed the threshold (moving right to left)
+            // if the x coordinate of the dot is at or has surpassed the threshold plus one (moving right to left)
             // remove the dot from the stage and the list of dots
-            if (dots.get(i).getX() <= xThreshold){
+            if (dots.get(i).getX() <= xThreshold + 3){
                 dots.get(i).remove();
                 dots.remove(i);
             }
@@ -247,7 +246,7 @@ public class MarketInterface implements Screen {
     public void removeGraphLabels(int xThreshold, ArrayList<Label> labels){
         // essentially identical to removeGraphDots but for Labels, may be redundant
         for (int i = 0; i < labels.size(); i++){
-            if (labels.get(i).getX() <= xThreshold){
+            if (labels.get(i).getX() <= xThreshold + 3){
                 labels.get(i).remove();
                 labels.remove(i);
             }
@@ -329,6 +328,8 @@ public class MarketInterface implements Screen {
                     // up the graph
                     Label quantityLabel = new Label(String.valueOf(priceMax / 10 * labelNum), firstSkin);
                     quantityLabel.setPosition(priceX + priceWidth - 20, priceY +  ((int) (priceHeight / 10) * labelNum) - 10);
+                    // quantityLabel.setAlignment(Align.right);
+                    // ^doesn't work
 
                     // add action for the labels to move to the left, following the dots. Unlike dots and tick number
                     // labels, the price labels will not be deleted upon reaching their resting place on the y-axis

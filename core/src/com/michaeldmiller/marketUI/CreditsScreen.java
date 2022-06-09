@@ -1,4 +1,4 @@
-package com.michaeldmiller.marketgui;
+package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -13,24 +13,24 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 public class CreditsScreen implements Screen {
-    final MarketGUI marketGUI;
+    final MarketUI marketUI;
     Stage stage;
     Label musicCredits;
 
 
-    public CreditsScreen(final MarketGUI marketGUI){
-        this.marketGUI = marketGUI;
-        stage = new Stage(new FitViewport(marketGUI.worldWidth, marketGUI.worldHeight));
+    public CreditsScreen(final MarketUI marketUI){
+        this.marketUI = marketUI;
+        stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
         Skin firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         Button menuButton = new TextButton("Menu", firstSkin);
-        menuButton.setPosition(marketGUI.worldWidth - marketGUI.standardButtonWidth,
-                marketGUI.worldHeight - marketGUI.standardButtonHeight);
-        menuButton.setSize(marketGUI.standardButtonWidth, marketGUI.standardButtonHeight);
+        menuButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - marketUI.standardButtonHeight);
+        menuButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
         menuButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketGUI.setScreen(marketGUI.mainMenu);
+                marketUI.setScreen(marketUI.mainMenu);
                 dispose();
             }
             @Override
@@ -41,7 +41,7 @@ public class CreditsScreen implements Screen {
         stage.addActor(menuButton);
 
         musicCredits = new Label ("Credits", firstSkin);
-        musicCredits.setPosition(100, marketGUI.worldHeight - 50);
+        musicCredits.setPosition(100, marketUI.worldHeight - 50);
         stage.addActor(musicCredits);
 
 
