@@ -37,7 +37,7 @@ public class MainInterface implements Screen {
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
-        scale = 3;
+        scale = 1;
 
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
@@ -58,9 +58,9 @@ public class MainInterface implements Screen {
         makeAdjustmentFields();
 
         // add price graph
-        priceGraph = new ScrollingGraph((int) (0.05 * marketUI.worldWidth), (int) (0.1 * marketUI.worldHeight),
-                (int) (0.65 * marketUI.worldWidth), (int) (0.7 * marketUI.worldHeight), scale, "Prices",
-                new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage);
+        priceGraph = new ScrollingGraph((int) (0.05 * marketUI.worldWidth), (int) (0.3 * marketUI.worldHeight),
+                (int) (0.1 * marketUI.worldWidth), (int) (0.2 * marketUI.worldHeight), marketUI.worldHeight,
+                scale, "Prices", new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
     }

@@ -18,6 +18,7 @@ public class ScrollingGraph {
     private int y;
     private int width;
     private int height;
+    private int worldHeight;
     private int scale;
     private String title;
     private HashMap<String, Integer> dataCoordinates;
@@ -28,13 +29,14 @@ public class ScrollingGraph {
     private ArrayList<GraphPoint> dots;
     private ArrayList<Label> labels;
 
-    public ScrollingGraph(int x, int y, int width, int height, int scale, String title,
+    public ScrollingGraph(int x, int y, int width, int height, int worldHeight, int scale, String title,
                           HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
                           Skin skin, int frame, Stage stage){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.worldHeight = worldHeight;
         this.scale = scale;
         this.title = title;
         this.dataCoordinates = dataCoordinates;
@@ -57,6 +59,9 @@ public class ScrollingGraph {
     }
     public int getHeight(){
         return height;
+    }
+    public int getWorldHeight(){
+        return worldHeight;
     }
     public int getScale(){
         return scale;
@@ -97,6 +102,9 @@ public class ScrollingGraph {
     }
     public void setHeight(int newHeight) {
         this.height = newHeight;
+    }
+    public void setWorldHeight(int newWorldHeight){
+        this.worldHeight = newWorldHeight;
     }
     public void setScale(int newScale) {
         this.scale = newScale;
@@ -172,7 +180,7 @@ public class ScrollingGraph {
                 new Color (0.7f, 0.7f, 0.7f, 1)));
         graphTitle.setAlignment(Align.center);
         graphTitle.setPosition(((int) (x + (width / 2))) - (int) (graphTitle.getWidth() / 2),
-                (int) (y + height - (0.06 * height)));
+                (int) (y + height - ((0.045 * height) * (worldHeight/height))));
         // graphTitle.setFontScale(2);
         stage.addActor(graphTitle);
 
