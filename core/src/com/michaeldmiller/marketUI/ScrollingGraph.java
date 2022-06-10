@@ -1,10 +1,13 @@
 package com.michaeldmiller.marketUI;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Align;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ public class ScrollingGraph {
     private int width;
     private int height;
     private int scale;
+    private String title;
     private HashMap<String, Integer> dataCoordinates;
     private HashMap<String, Color> colorLookup;
     private Skin skin;
@@ -24,13 +28,15 @@ public class ScrollingGraph {
     private ArrayList<GraphPoint> dots;
     private ArrayList<Label> labels;
 
-    public ScrollingGraph(int x, int y, int width, int height, int scale, HashMap<String, Integer> dataCoordinates,
-                          HashMap<String, Color> colorLookup, Skin skin, int frame, Stage stage){
+    public ScrollingGraph(int x, int y, int width, int height, int scale, String title,
+                          HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
+                          Skin skin, int frame, Stage stage){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.scale = scale;
+        this.title = title;
         this.dataCoordinates = dataCoordinates;
         this.colorLookup = colorLookup;
         this.skin = skin;
@@ -55,6 +61,9 @@ public class ScrollingGraph {
     public int getScale(){
         return scale;
     }
+    public String getTitle() {
+        return title;
+    }
     public HashMap<String, Integer> getDataCoordinates(){
         return dataCoordinates;
     }
@@ -76,7 +85,7 @@ public class ScrollingGraph {
     public ArrayList<Label> getLabels() {
         return labels;
     }
-    // Mutators
+    // mutators
     public void setX(int newX) {
         this.x = newX;
     }
@@ -91,6 +100,9 @@ public class ScrollingGraph {
     }
     public void setScale(int newScale) {
         this.scale = newScale;
+    }
+    public void setTitle(String newTitle){
+        this.title = newTitle;
     }
     public void setDataCoordinates(HashMap<String, Integer> newDataCoordinates) {
         this.dataCoordinates = newDataCoordinates;
@@ -154,6 +166,15 @@ public class ScrollingGraph {
         GraphPoint yCeiling = new GraphPoint(x + width, y,
                 2, height, new Color (0, 0, 0, 1));
         stage.addActor(yCeiling);
+        // add title
+        Label graphTitle = new Label(title, new Label.LabelStyle(
+                new BitmapFont(Gdx.files.internal("franklin-medium.fnt")),
+                new Color (0.7f, 0.7f, 0.7f, 1)));
+        graphTitle.setAlignment(Align.center);
+        graphTitle.setPosition(((int) (x + (width / 2))) - (int) (graphTitle.getWidth() / 2),
+                (int) (y + height - (0.06 * height)));
+        // graphTitle.setFontScale(2);
+        stage.addActor(graphTitle);
 
     }
 

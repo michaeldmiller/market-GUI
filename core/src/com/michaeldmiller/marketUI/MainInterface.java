@@ -59,7 +59,7 @@ public class MainInterface implements Screen {
 
         // add price graph
         priceGraph = new ScrollingGraph((int) (0.05 * marketUI.worldWidth), (int) (0.1 * marketUI.worldHeight),
-                (int) (0.65 * marketUI.worldWidth), (int) (0.7 * marketUI.worldHeight), scale,
+                (int) (0.65 * marketUI.worldWidth), (int) (0.7 * marketUI.worldHeight), scale, "Prices",
                 new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
