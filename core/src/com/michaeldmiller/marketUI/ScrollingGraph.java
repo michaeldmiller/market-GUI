@@ -18,8 +18,9 @@ public class ScrollingGraph {
     private int y;
     private int width;
     private int height;
+    private int worldWidth;
     private int worldHeight;
-    private int scale;
+    private double scale;
     private String title;
     private HashMap<String, Integer> dataCoordinates;
     private HashMap<String, Color> colorLookup;
@@ -29,13 +30,14 @@ public class ScrollingGraph {
     private ArrayList<GraphPoint> dots;
     private ArrayList<Label> labels;
 
-    public ScrollingGraph(int x, int y, int width, int height, int worldHeight, int scale, String title,
-                          HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
+    public ScrollingGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
+                          String title, HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
                           Skin skin, int frame, Stage stage){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
         this.scale = scale;
         this.title = title;
@@ -60,10 +62,13 @@ public class ScrollingGraph {
     public int getHeight(){
         return height;
     }
+    public int getWorldWidth(){
+        return worldWidth;
+    }
     public int getWorldHeight(){
         return worldHeight;
     }
-    public int getScale(){
+    public double getScale(){
         return scale;
     }
     public String getTitle() {
@@ -102,6 +107,9 @@ public class ScrollingGraph {
     }
     public void setHeight(int newHeight) {
         this.height = newHeight;
+    }
+    public void setWorldWidth(int newWorldWidth){
+        this.worldWidth = newWorldWidth;
     }
     public void setWorldHeight(int newWorldHeight){
         this.worldHeight = newWorldHeight;
@@ -187,7 +195,19 @@ public class ScrollingGraph {
     }
 
     public void graphLabels(){
-        if (frame % 200 == 0 || frame == 1){
+        // calculate how often to send frame label
+        // screen width can fit, comfortably, 20 labels. Calculate ratio of graph width to screen width, determine
+        // how many labels will fit on a graph. Given that it takes ~2400 frames for the dots to traverse the graph,
+        // finally determine how often to send a label.
+        // this calculation is dependent on an actor move duration of 50.
+
+        int dotTransitTime = 2400;
+        int frameThreshold = (int) (dotTransitTime / (20 * ((double) (width) / worldWidth)));
+
+        // round to the 50
+        frameThreshold = (int) (Math.round((frameThreshold) / 50.0) * 50);
+
+        if (frame % frameThreshold == 0 || frame == 1){
             Label timeLabel = new Label(String.valueOf(frame), skin);
             timeLabel.setPosition(x + width, y - 20);
 
@@ -205,7 +225,7 @@ public class ScrollingGraph {
 
         if (frame == 1){
             // set range of prices to be covered in the graph
-            int priceMax = height/scale;
+            int priceMax = (int) (height/scale);
             int labelNum = 1;
 
             for (int i = x; i < (height + x); i++) {

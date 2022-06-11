@@ -27,7 +27,7 @@ public class MainInterface implements Screen {
     Label errorLabel;
     TextField goodField;
     TextField costField;
-    int scale;
+    double scale;
     int frame;
     double secondFraction;
     ScrollingGraph priceGraph;
@@ -37,7 +37,7 @@ public class MainInterface implements Screen {
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
-        scale = 1;
+        scale = 1.75;
 
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
@@ -58,9 +58,10 @@ public class MainInterface implements Screen {
         makeAdjustmentFields();
 
         // add price graph
-        priceGraph = new ScrollingGraph((int) (0.05 * marketUI.worldWidth), (int) (0.3 * marketUI.worldHeight),
-                (int) (0.1 * marketUI.worldWidth), (int) (0.2 * marketUI.worldHeight), marketUI.worldHeight,
-                scale, "Prices", new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage);
+        priceGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
     }
@@ -247,7 +248,7 @@ public class MainInterface implements Screen {
         priceGraph.setFrame(frame);
         HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
         for (Price p : market.getPrices()){
-            priceCoordinates.put(p.getGood(), (int) p.getCost() * priceGraph.getScale());
+            priceCoordinates.put(p.getGood(), (int) (p.getCost() * (priceGraph.getScale())));
         }
         priceGraph.setDataCoordinates(priceCoordinates);
         priceGraph.graphData();
