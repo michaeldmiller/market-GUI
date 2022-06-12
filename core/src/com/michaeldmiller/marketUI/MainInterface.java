@@ -35,6 +35,7 @@ public class MainInterface implements Screen {
     ScrollingGraph priceGraph;
     ScrollingGraph professionGraph;
     ScrollingGraph moneyGraph;
+    ScrollingGraph unmetNeedGraph;
 
     public MainInterface (final MarketUI marketUI) {
         this.marketUI = marketUI;
@@ -73,17 +74,23 @@ public class MainInterface implements Screen {
         // add profession graph
         professionGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 500.0 / numberOfAgents, "Professions", new HashMap<String, Integer>(),
+                marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         // add money graph
         moneyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
                 marketUI.worldHeight, 0.000005, "Money", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        // unmet needs graph
+        unmetNeedGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
         professionGraph.makeGraph();
         moneyGraph.makeGraph();
+        unmetNeedGraph.makeGraph();
     }
 
     @Override
@@ -106,18 +113,21 @@ public class MainInterface implements Screen {
             updatePriceGraph();
             updateProfessionGraph();
             updateMoneyGraph();
+            updateUnmetNeedGraph();
             prices.setText(market.getPrices().toString());
 
         }
         priceGraph.graphLabels();
         professionGraph.graphLabels();
         moneyGraph.graphLabels();
+        unmetNeedGraph.graphLabels();
         stage.act(delta);
         stage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
 
     }
 
@@ -338,4 +348,38 @@ public class MainInterface implements Screen {
         moneyGraph.removeGraphDots(moneyGraph.getX(), moneyGraph.getDots());
         moneyGraph.removeGraphLabels(moneyGraph.getX(), moneyGraph.getLabels());
     }
+
+    public void updateUnmetNeedGraph(){
+        // update function for the unmet need graph, gets unmet need data from each agent and then turns it into coordinates
+        unmetNeedGraph.setFrame(frame);
+
+        HashMap<String, Double> unmetNeedTotal = new HashMap<String, Double>();
+        // get total amount of unmet needs by looping through each unmet need list in each good for each agent
+        // this feels like it is extremely performance intensive!
+        for (Agent a : market.getAgents()){
+            for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
+                for (UnmetConsumption unmetConsumption : consumptionEntry.getValue().getUnmetNeeds()){
+                    if (!unmetNeedTotal.containsKey(consumptionEntry.getKey())){
+                        unmetNeedTotal.put(consumptionEntry.getKey(), unmetConsumption.getMissingQuantity());
+                    }
+                    else {
+                        String key = consumptionEntry.getKey();
+                        unmetNeedTotal.put(key, unmetNeedTotal.get(key) + unmetConsumption.getMissingQuantity());
+                    }
+                }
+            }
+        }
+        // set doubles to integers
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Double> unmetEntryTotal : unmetNeedTotal.entrySet()){
+            int coordinateValue = (int) (unmetEntryTotal.getValue() * (unmetNeedGraph.getScale()));
+            professionCoordinates.put(unmetEntryTotal.getKey(), coordinateValue);
+        }
+
+        unmetNeedGraph.setDataCoordinates(professionCoordinates);
+        unmetNeedGraph.graphData();
+        unmetNeedGraph.removeGraphDots(unmetNeedGraph.getX(), unmetNeedGraph.getDots());
+        unmetNeedGraph.removeGraphLabels(unmetNeedGraph.getX(), unmetNeedGraph.getLabels());
+    }
+
 }
