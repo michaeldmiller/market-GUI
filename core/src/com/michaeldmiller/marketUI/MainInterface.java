@@ -14,6 +14,7 @@ import com.michaeldmiller.economicagents.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.michaeldmiller.economicagents.MarketMain.*;
 
@@ -30,7 +31,9 @@ public class MainInterface implements Screen {
     double scale;
     int frame;
     double secondFraction;
+    int numberOfAgents;
     ScrollingGraph priceGraph;
+    ScrollingGraph professionGraph;
 
     public MainInterface (final MarketUI marketUI) {
         this.marketUI = marketUI;
@@ -38,6 +41,8 @@ public class MainInterface implements Screen {
         frame = 0;
         secondFraction = 0.0167;
         scale = 1.75;
+        // set number of agents
+        numberOfAgents = 2000;
 
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
@@ -45,6 +50,8 @@ public class MainInterface implements Screen {
         colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
         colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
         colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+        // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
+        colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
 
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
@@ -62,8 +69,13 @@ public class MainInterface implements Screen {
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
                 marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        professionGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 500.0 / numberOfAgents, "Professions", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
+        professionGraph.makeGraph();
     }
 
     @Override
@@ -84,10 +96,12 @@ public class MainInterface implements Screen {
                 throw new RuntimeException(e);
             }
             updatePriceGraph();
+            updateProfessionGraph();
             prices.setText(market.getPrices().toString());
 
         }
         priceGraph.graphLabels();
+        professionGraph.graphLabels();
         stage.act(delta);
         stage.draw();
     }
@@ -203,8 +217,7 @@ public class MainInterface implements Screen {
         currentMarketProfile.add(grain);
         currentMarketProfile.add(metal);
 
-        // set number of agents
-        int numberOfAgents = 2000;
+
         // create agents
         ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
         // create market
@@ -254,5 +267,36 @@ public class MainInterface implements Screen {
         priceGraph.graphData();
         priceGraph.removeGraphDots(priceGraph.getX(), priceGraph.getDots());
         priceGraph.removeGraphLabels(priceGraph.getX(), priceGraph.getLabels());
+    }
+
+    public void updateProfessionGraph(){
+        // update function for the profession graph, gets job data from market and then turns it into coordinates
+        professionGraph.setFrame(frame);
+
+        HashMap<String, Integer> jobsTotal = new HashMap<String, Integer>();
+        // get total amount in each job by looping through all agents
+        for (Agent a : market.getAgents()){
+            if (!jobsTotal.containsKey(a.getProfession().getJob())){
+                jobsTotal.put(a.getProfession().getJob(), 1);
+            }
+            else {
+                String key = a.getProfession().getJob();
+                jobsTotal.put(key, jobsTotal.get(key) + 1);
+            }
+        }
+        // convert profession names to good names to match with color lookup
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Integer> professionTotal : jobsTotal.entrySet()){
+            for (JobOutput j : market.getJobOutputs()){
+                if (j.getJob().equals(professionTotal.getKey())){
+                    professionCoordinates.put(j.getGood(), (int) (professionTotal.getValue() *
+                            (professionGraph.getScale())));
+                }
+            }
+        }
+        professionGraph.setDataCoordinates(professionCoordinates);
+        professionGraph.graphData();
+        professionGraph.removeGraphDots(professionGraph.getX(), professionGraph.getDots());
+        professionGraph.removeGraphLabels(professionGraph.getX(), professionGraph.getLabels());
     }
 }

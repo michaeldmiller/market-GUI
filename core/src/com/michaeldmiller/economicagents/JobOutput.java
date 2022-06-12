@@ -1,6 +1,5 @@
 package com.michaeldmiller.economicagents;
 
-// Next up is defining the com.michaeldmiller.economicagents.Market, for the Agents to interact.
 public class JobOutput {
     private String job;
     private String good;

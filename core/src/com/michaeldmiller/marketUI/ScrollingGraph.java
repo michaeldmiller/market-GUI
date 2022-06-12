@@ -225,7 +225,7 @@ public class ScrollingGraph {
 
         if (frame == 1){
             // set range of prices to be covered in the graph
-            int priceMax = (int) (height/scale);
+            int priceMax = (int) (height * 1.0 /scale);
             int labelNum = 1;
 
             for (int i = x; i < (height + x); i++) {
