@@ -34,6 +34,7 @@ public class MainInterface implements Screen {
     int numberOfAgents;
     ScrollingGraph priceGraph;
     ScrollingGraph professionGraph;
+    ScrollingGraph moneyGraph;
 
     public MainInterface (final MarketUI marketUI) {
         this.marketUI = marketUI;
@@ -69,13 +70,20 @@ public class MainInterface implements Screen {
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
                 marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        // add profession graph
         professionGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
                 marketUI.worldHeight, 500.0 / numberOfAgents, "Professions", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        // add money graph
+        moneyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.000005, "Money", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
 
         priceGraph.makeGraph();
         professionGraph.makeGraph();
+        moneyGraph.makeGraph();
     }
 
     @Override
@@ -97,11 +105,13 @@ public class MainInterface implements Screen {
             }
             updatePriceGraph();
             updateProfessionGraph();
+            updateMoneyGraph();
             prices.setText(market.getPrices().toString());
 
         }
         priceGraph.graphLabels();
         professionGraph.graphLabels();
+        moneyGraph.graphLabels();
         stage.act(delta);
         stage.draw();
     }
@@ -298,5 +308,34 @@ public class MainInterface implements Screen {
         professionGraph.graphData();
         professionGraph.removeGraphDots(professionGraph.getX(), professionGraph.getDots());
         professionGraph.removeGraphLabels(professionGraph.getX(), professionGraph.getLabels());
+    }
+    public void updateMoneyGraph(){
+        // update function for the money graph, gets agent money data from market and then turns it into coordinates
+        moneyGraph.setFrame(frame);
+
+        int moneyTotal = 0;
+        // get total funds of all agents
+        for (Agent a : market.getAgents()) {
+            moneyTotal += a.getMoney();
+        }
+
+        // convert profession names to good names to match with color lookup
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+
+        // generate non-zero coordinate:
+        int moneyCoordinate = 0;
+        if (((int) (moneyTotal * (moneyGraph.getScale()))) == 0){
+            moneyCoordinate = 1;
+        }
+        else {
+            moneyCoordinate = (int) (moneyTotal * (moneyGraph.getScale()));
+        }
+        // System.out.println(moneyCoordinate);
+        professionCoordinates.put("MarketProperty", moneyCoordinate);
+
+        moneyGraph.setDataCoordinates(professionCoordinates);
+        moneyGraph.graphData();
+        moneyGraph.removeGraphDots(moneyGraph.getX(), moneyGraph.getDots());
+        moneyGraph.removeGraphLabels(moneyGraph.getX(), moneyGraph.getLabels());
     }
 }
