@@ -36,12 +36,14 @@ public class MainInterface implements Screen {
     ScrollingGraph professionGraph;
     ScrollingGraph moneyGraph;
     ScrollingGraph unmetNeedGraph;
+    ScrollingGraph marketInventoryGraph;
 
     public MainInterface (final MarketUI marketUI) {
         this.marketUI = marketUI;
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
+        //secondFraction = 1;
         scale = 1.75;
         // set number of agents
         numberOfAgents = 2000;
@@ -84,13 +86,20 @@ public class MainInterface implements Screen {
         // unmet needs graph
         unmetNeedGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
+                marketUI.worldHeight, 0.1, "Unmet Needs", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        // market inventory graph
+        marketInventoryGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.005, "Inventory", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+
 
         priceGraph.makeGraph();
         professionGraph.makeGraph();
         moneyGraph.makeGraph();
         unmetNeedGraph.makeGraph();
+        //marketInventoryGraph.makeGraph();
     }
 
     @Override
@@ -114,6 +123,7 @@ public class MainInterface implements Screen {
             updateProfessionGraph();
             updateMoneyGraph();
             updateUnmetNeedGraph();
+            // updateMarketInventoryGraph();
             prices.setText(market.getPrices().toString());
 
         }
@@ -121,6 +131,7 @@ public class MainInterface implements Screen {
         professionGraph.graphLabels();
         moneyGraph.graphLabels();
         unmetNeedGraph.graphLabels();
+        // marketInventoryGraph.graphLabels();
         stage.act(delta);
         stage.draw();
     }
@@ -223,14 +234,14 @@ public class MainInterface implements Screen {
     // Market instantiation
     public void instantiateMarket(){
         // set up market profile
-        MarketInfo fish = new MarketInfo("Fish", 0.35, -0.5, 0.7,
-                9, 1, "Fisherman", 0.4);
-        MarketInfo lumber = new MarketInfo("Lumber", 0.2, -0.5, 0.8,
-                15, 1, "Lumberjack", 0.2);
-        MarketInfo grain = new MarketInfo("Grain", 0.45, -0.5, 0.4,
-                7, 1, "Farmer", 0.4);
-        MarketInfo metal = new MarketInfo("Metal", 0.10, -1.2, 1.5,
-                50, 1, "Blacksmith", 0.05);
+        MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
+                10, 1, "Fisherman", 0.4);
+        MarketInfo lumber = new MarketInfo("Lumber", 0.2, 50,-0.7, 0.8,
+                10, 1, "Lumberjack", 0.2);
+        MarketInfo grain = new MarketInfo("Grain", 0.45, 1.5, -0.5, 0.4,
+                10, 1, "Farmer", 0.4);
+        MarketInfo metal = new MarketInfo("Metal", 0.10, 0.25, -1.2, 1.5,
+                10, 1, "Blacksmith", 0.05);
         ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
         currentMarketProfile.add(fish);
         currentMarketProfile.add(lumber);
@@ -380,6 +391,18 @@ public class MainInterface implements Screen {
         unmetNeedGraph.graphData();
         unmetNeedGraph.removeGraphDots(unmetNeedGraph.getX(), unmetNeedGraph.getDots());
         unmetNeedGraph.removeGraphLabels(unmetNeedGraph.getX(), unmetNeedGraph.getLabels());
+    }
+    public void updateMarketInventoryGraph(){
+        // update function for the price graph, gets price data from market and then turns it into coordinates
+        marketInventoryGraph.setFrame(frame);
+        HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Double> good : market.getInventory().entrySet()){
+            priceCoordinates.put(good.getKey(), (int) (good.getValue() * (marketInventoryGraph.getScale())));
+        }
+        marketInventoryGraph.setDataCoordinates(priceCoordinates);
+        marketInventoryGraph.graphData();
+        marketInventoryGraph.removeGraphDots(marketInventoryGraph.getX(), marketInventoryGraph.getDots());
+        marketInventoryGraph.removeGraphLabels(marketInventoryGraph.getX(), marketInventoryGraph.getLabels());
     }
 
 }
