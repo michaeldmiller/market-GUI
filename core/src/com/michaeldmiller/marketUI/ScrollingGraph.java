@@ -29,6 +29,7 @@ public class ScrollingGraph {
     private Stage stage;
     private ArrayList<GraphPoint> dots;
     private ArrayList<Label> labels;
+    private Label graphTitle;
 
     public ScrollingGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
                           String title, HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
@@ -48,6 +49,7 @@ public class ScrollingGraph {
         this.stage = stage;
         this.dots = new ArrayList<GraphPoint>();
         this.labels = new ArrayList<Label>();
+        this.graphTitle = new Label("", skin);
     }
     // accessors
     public int getX(){
@@ -95,6 +97,9 @@ public class ScrollingGraph {
     public ArrayList<Label> getLabels() {
         return labels;
     }
+    public Label getGraphTitle() {
+        return graphTitle;
+    }
     // mutators
     public void setX(int newX) {
         this.x = newX;
@@ -141,6 +146,9 @@ public class ScrollingGraph {
     public void setLabels(ArrayList<Label> newLabels) {
         this.labels = newLabels;
     }
+    public void setGraphTitle(Label newGraphTitle) {
+        this.graphTitle = newGraphTitle;
+    }
 
     public void graphData(){
         // access and store all current prices, adjusted to scale with the size of the graph
@@ -183,7 +191,7 @@ public class ScrollingGraph {
                 2, height, new Color (0, 0, 0, 1));
         stage.addActor(yCeiling);
         // add title
-        Label graphTitle = new Label(title, new Label.LabelStyle(
+        graphTitle = new Label(title, new Label.LabelStyle(
                 new BitmapFont(Gdx.files.internal("franklin-medium.fnt")),
                 new Color (0.7f, 0.7f, 0.7f, 1)));
         graphTitle.setAlignment(Align.center);
@@ -259,6 +267,18 @@ public class ScrollingGraph {
                 }
             }
         }
+    }
+    public void updateGraphTitle(){
+        graphTitle.remove();
+        graphTitle = new Label("Agent: " + title, new Label.LabelStyle(
+                new BitmapFont(Gdx.files.internal("franklin-medium.fnt")),
+                new Color (0.7f, 0.7f, 0.7f, 1)));
+        graphTitle.setAlignment(Align.center);
+        graphTitle.setPosition(((int) (x + (width / 2))) - (int) (graphTitle.getWidth() / 2),
+                (int) (y + height - ((0.045 * height) * (worldHeight/height))));
+        stage.addActor(graphTitle);
+
+
     }
 
     // remove functions

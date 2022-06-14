@@ -28,6 +28,7 @@ public class MainInterface implements Screen {
     Label errorLabel;
     TextField goodField;
     TextField costField;
+    TextField agentField;
     double scale;
     int frame;
     double secondFraction;
@@ -37,6 +38,8 @@ public class MainInterface implements Screen {
     ScrollingGraph moneyGraph;
     ScrollingGraph unmetNeedGraph;
     ScrollingGraph marketInventoryGraph;
+    ScrollingGraph agentPropertyGraph;
+    String agentID;
 
     public MainInterface (final MarketUI marketUI) {
         this.marketUI = marketUI;
@@ -47,6 +50,8 @@ public class MainInterface implements Screen {
         scale = 1.75;
         // set number of agents
         numberOfAgents = 2000;
+        // set initial agent
+        agentID = "1";
 
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
@@ -86,20 +91,26 @@ public class MainInterface implements Screen {
         // unmet needs graph
         unmetNeedGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.1, "Unmet Needs", new HashMap<String, Integer>(),
+                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         // market inventory graph
         marketInventoryGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
                 (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
                 marketUI.worldHeight, 0.005, "Inventory", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
+        // agent property graph
+        agentPropertyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
 
 
         priceGraph.makeGraph();
         professionGraph.makeGraph();
-        moneyGraph.makeGraph();
+        // moneyGraph.makeGraph();
         unmetNeedGraph.makeGraph();
         //marketInventoryGraph.makeGraph();
+        agentPropertyGraph.makeGraph();
     }
 
     @Override
@@ -121,17 +132,19 @@ public class MainInterface implements Screen {
             }
             updatePriceGraph();
             updateProfessionGraph();
-            updateMoneyGraph();
+            // updateMoneyGraph();
             updateUnmetNeedGraph();
             // updateMarketInventoryGraph();
+            updateAgentPropertyGraph(agentID);
             prices.setText(market.getPrices().toString());
 
         }
         priceGraph.graphLabels();
         professionGraph.graphLabels();
-        moneyGraph.graphLabels();
+        // moneyGraph.graphLabels();
         unmetNeedGraph.graphLabels();
         // marketInventoryGraph.graphLabels();
+        agentPropertyGraph.graphLabels();
         stage.act(delta);
         stage.draw();
     }
@@ -225,9 +238,31 @@ public class MainInterface implements Screen {
         });
         stage.addActor(changeCostButton);
 
+        // change agent (requires agent property graph)
+        agentField = new TextField("New Agent ID:", firstSkin);
+        agentField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (5 * marketUI.standardButtonHeight));
+        stage.addActor(agentField);
+
+        Button changeAgentButton = new TextButton("Update Agent", firstSkin);
+        changeAgentButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (6 * marketUI.standardButtonHeight));
+        changeAgentButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        changeAgentButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                changeAgent();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(changeAgentButton);
+
         errorLabel = new Label ("Errors Here", firstSkin);
         errorLabel.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (4.5 * marketUI.standardButtonHeight));
+                marketUI.worldHeight - (int) (6.5 * marketUI.standardButtonHeight));
         stage.addActor(errorLabel);
 
     }
@@ -260,7 +295,7 @@ public class MainInterface implements Screen {
 
     }
 
-    // modifier function
+    // modifier functions
     public void changePrice(){
         // given information in good and cost text fields, attempt to change the corresponding cost in the market
         boolean costOK = false;
@@ -270,7 +305,6 @@ public class MainInterface implements Screen {
 
         // make sure the user entered value is an integer
         try{
-            System.out.println(cost);
             costValue = Integer.parseInt(cost);
             costOK = true;
         } catch (NumberFormatException e){
@@ -284,8 +318,22 @@ public class MainInterface implements Screen {
                 }
             }
         }
-
     }
+    public void changeAgent(){
+        // given information in good and cost text fields, attempt to change the corresponding cost in the market
+        String proposedAgentID = agentField.getText();
+
+        // if value is ok, check goods for match and assign cost
+        for (Agent a : market.getAgents()){
+            if (a.getId().equals(proposedAgentID)){
+                agentID = proposedAgentID;
+                agentPropertyGraph.setTitle(proposedAgentID);
+                agentPropertyGraph.updateGraphTitle();
+            }
+        }
+    }
+
+
     // graph update functions
     public void updatePriceGraph(){
         // update function for the price graph, gets price data from market and then turns it into coordinates
@@ -403,6 +451,46 @@ public class MainInterface implements Screen {
         marketInventoryGraph.graphData();
         marketInventoryGraph.removeGraphDots(marketInventoryGraph.getX(), marketInventoryGraph.getDots());
         marketInventoryGraph.removeGraphLabels(marketInventoryGraph.getX(), marketInventoryGraph.getLabels());
+    }
+
+    public void updateAgentPropertyGraph(String agentID){
+        // given the Agent ID, get properties about it for display
+        // start with available money and profession
+        // to start: get the agent
+        agentPropertyGraph.setFrame(frame);
+        MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
+                10, 1, "Fisherman", 1);
+        ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
+        currentMarketProfile.add(fish);
+        Agent chosenAgent = makeAgents(currentMarketProfile, 1).get(0);
+        for (Agent a : market.getAgents()){
+            if (a.getId().equals(agentID)){
+                chosenAgent = a;
+            }
+        }
+        // get properties of the chosen agent
+        HashMap<String, Integer> agentDataCoordinates = new HashMap<String, Integer>();
+
+        // get money coordinate
+        int moneyCoordinate = (int) (chosenAgent.getMoney() * (agentPropertyGraph.getScale()));
+        agentDataCoordinates.put("MarketProperty", moneyCoordinate);
+
+        // get profession information
+        int professionCoordinate = (int) (agentPropertyGraph.getHeight() / 2);
+        String profession = chosenAgent.getProfession().getJob();
+        String professionGood = "MarketProperty";
+        for (JobOutput j : market.getJobOutputs()){
+            if (j.getJob().equals(profession)){
+                professionGood = j.getGood();
+            }
+        }
+        agentDataCoordinates.put(professionGood, professionCoordinate);
+        // System.out.println(agentDataCoordinates);
+
+        agentPropertyGraph.setDataCoordinates(agentDataCoordinates);
+        agentPropertyGraph.graphData();
+        agentPropertyGraph.removeGraphDots(agentPropertyGraph.getX(), agentPropertyGraph.getDots());
+        agentPropertyGraph.removeGraphLabels(agentPropertyGraph.getX(), agentPropertyGraph.getLabels());
     }
 
 }
