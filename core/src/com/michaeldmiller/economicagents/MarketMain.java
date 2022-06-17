@@ -143,7 +143,13 @@ public class MarketMain {
         agent.getProfession().setShortRunProduction(producedQuantity);
 
         // pay Agent
+        //System.out.println("Agent ID" + agent.getId() + "current money" + agent.getMoney());
+        // System.out.println("Produced Quantity" + producedQuantity + "Current Price" + currentPrice);
+        //System.out.println("Skill Level" + agent.getProfession().getSkillLevel() + "Base Production" + agent.getProfession().getBaseProduction());
         agent.setMoney(agent.getMoney() + (producedQuantity * currentPrice));
+        //System.out.println("New money" + agent.getMoney());
+        // Market pays
+        market.setMoney(market.getMoney() - (producedQuantity * currentPrice));
         // send good to market
         market.getInventory().put(goodType, market.getInventory().get(goodType) + producedQuantity);
 
@@ -165,26 +171,8 @@ public class MarketMain {
     public static void agentConsume (Agent a, Market m){
         for (Map.Entry<String, Consumption> agentConsumption: a.getConsumption().entrySet()){
             // handle unmet needs, if they exist
-            for (int i = 0; i < a.getConsumption().get(agentConsumption.getKey()).getUnmetNeeds().size(); i++){
-                UnmetConsumption u = a.getConsumption().get(agentConsumption.getKey()).getUnmetNeeds().get(i);
-                u.setTicksPassed(u.getTicksPassed() + 1);
+            // unmet need cap would go here if implemented
 
-                // simulate forgetting past unmet needs
-                // if memory is 50 ticks old, begin reducing quantity
-                if (u.getTicksPassed() >= 50){
-                    u.setMissingQuantity(u.getMissingQuantity() - 0.01);
-                }
-
-                // if memory is more than 100 ticks old, reduce faster
-                if (u.getTicksPassed() >= 100){
-                    u.setMissingQuantity(u.getMissingQuantity() - 0.04);
-                }
-
-                // remove memory if quantity dips to or below 0
-                if (u.getMissingQuantity() <= 0) {
-                    a.getConsumption().get(agentConsumption.getKey()).getUnmetNeeds().remove(u);
-                }
-            }
 
             double currentInventoryAmount = a.getInventory().get(agentConsumption.getKey());
             double newInventoryAmount = currentInventoryAmount - agentConsumption.getValue().getTickConsumption();
@@ -196,9 +184,9 @@ public class MarketMain {
                 double shortage = currentInventoryAmount - newInventoryAmount;
                 // prevent rounding error shortages from being counted
                 if (Math.abs(shortage) > 0.01){
-                    // add new unmet need to corresponding entry in agent's consumptions
-                    a.getConsumption().get(agentConsumption.getKey()).getUnmetNeeds()
-                            .add(new UnmetConsumption(0, shortage));
+                    // add value to total unmet need for agent
+                    a.getConsumption().get(agentConsumption.getKey()).setTotalUnmetNeed(
+                            a.getConsumption().get(agentConsumption.getKey()).getTotalUnmetNeed() + shortage);
 
                 }
                 a.getInventory().put(agentConsumption.getKey(), 0.0);
@@ -209,8 +197,9 @@ public class MarketMain {
                     }
                 }
             }
+
             // reset modifier if agent has successfully acquired a sufficient amount of the good
-            if (a.getInventory().get(agentConsumption.getKey()) >= 1){
+            if (a.getInventory().get(agentConsumption.getKey()) >= (1 - agentConsumption.getValue().getTickConsumption())){
                 for (Priority p : a.getPriorities()){
                     if (p.getGood().equals(agentConsumption.getKey())){
                         p.setModifier(1.0);
@@ -235,16 +224,13 @@ public class MarketMain {
         // calculate current relative demand based on elasticity
         for (Priority p : a.getPriorities()){
             // change demand elasticity based on sum of remembered unmet consumption
-            double totalUnmetNeed = 0;
-            for (UnmetConsumption u : a.getConsumption().get(p.getGood()).getUnmetNeeds()){
-                totalUnmetNeed += u.getMissingQuantity();
-            }
-            // set need ratio at 0.05 * (total unmet need / per tick consumption)
+            double totalUnmetNeed = a.getConsumption().get(p.getGood()).getTotalUnmetNeed();
+
+            // set need ratio at (total unmet need / per tick consumption)
             double unmetNeedRatio = totalUnmetNeed / a.getConsumption().get(p.getGood()).getTickConsumption();
             // y = -1 * (1 / unmetNeedRatio * original elasticity inverse)
             // (sets decay with y intercept at original elasticity)
-            p.setPriceElasticity(-1 * (1 / ((0.1 * unmetNeedRatio) +
-                    (Math.pow(Math.abs(p.getOriginalPriceElasticity()), -1)))));
+            p.setPriceElasticity(-1 * (1 / ((0.1 * unmetNeedRatio) + (Math.pow(Math.abs(p.getOriginalPriceElasticity()), -1)))));
 
             // get market values (may get market average here later)
             double currentMarketCost = 0;
@@ -273,7 +259,11 @@ public class MarketMain {
             // set demand curve, maybe actually working this time
             // get price induced demand reduction/increase
             // negative * negative = positive; positive * negative = negative
-            double priceElasticityOfDemand = relativeCostDifference * p.getPriceElasticity();
+
+            // currently, relative cost difference is always 0, making this useless
+            // double priceElasticityOfDemand = relativeCostDifference * p.getPriceElasticity();
+
+            double priceElasticityOfDemand = currentMarketCost * p.getPriceElasticity();
 
             // add decreasing marginal utility
             double amountInInventory = a.getInventory().get(p.getGood());
@@ -294,9 +284,6 @@ public class MarketMain {
             if (p.getWeight() < 0){
                 p.setWeight(0);
             }
-
-            // if market inventory greater than 5 times current production of each good, reduce price of the good
-            // if agent tries to buy from market but can't, price goes up, relative to number of agents in the market
         }
     }
     public static void marketPriorities (Market m){
@@ -317,6 +304,8 @@ public class MarketMain {
             // cast them to an integer
             satisfactions.add((int) p.getWeight());
         }
+        //System.out.println(goods);
+        //System.out.println(satisfactions);
         // start loop to pick a good to purchase
         // Only and always purchases 1 unit of a good!
         while (notPurchased) {
@@ -324,8 +313,10 @@ public class MarketMain {
             if (goods.size() == 0){
                 break;
             }
+            // System.out.println("Didn't break due to good size");
             // make choice
             String chosenGood = randomWeightedPick(goods, satisfactions);
+            //System.out.println("Chosen Good: " + chosenGood);
             // look up Good price
             double chosenGoodPrice = 0;
             for (Price c : m.getPrices()) {
@@ -337,6 +328,8 @@ public class MarketMain {
 
             // See if Agent can't afford to buy its chosen good
             if (a.getMoney() < chosenGoodPrice) {
+                //System.out.println("Couldn't afford: " + chosenGood);
+                //System.out.println("Agent money is" + a.getMoney() + "with a good price of " + chosenGoodPrice);
                 // find index of good
                 int index = 0;
                 for (int i = 0; i < goods.size(); i++) {
@@ -361,8 +354,8 @@ public class MarketMain {
                     }
                 }
                 for (Agent agents : m.getAgents()){
-                    if (!a.getProfession().getJob().equals(jobTitle)){
-                        a.setSatisfaction(a.getSatisfaction() - 0.1);
+                    if (!agents.getProfession().getJob().equals(jobTitle)){
+                        agents.setSatisfaction(a.getSatisfaction() - 0.1);
                     }
                 }
 
@@ -372,6 +365,7 @@ public class MarketMain {
             double availableQuantity = m.getInventory().get(chosenGood);
 
             if (availableQuantity < 1) {
+                //System.out.println("Market was out of: " + chosenGood);
                 // find index of good
                 int index = 0;
                 for (int i = 0; i < goods.size(); i++) {
@@ -392,9 +386,10 @@ public class MarketMain {
                         break;
                     }
                 }
+                // Fixed Bug v0.5.6
                 for (Agent agents : m.getAgents()){
-                    if (!a.getProfession().getJob().equals(jobTitle)){
-                        a.setSatisfaction(a.getSatisfaction() - 1);
+                    if (!agents.getProfession().getJob().equals(jobTitle)){
+                        agents.setSatisfaction(a.getSatisfaction() - 1);
                     }
                 }
 
@@ -410,6 +405,7 @@ public class MarketMain {
                 }
             }
             if (satisfactions.get(index) < holdMoneySatisfaction){
+                //System.out.println("Hold Money Threshold Overwhelmed Desire To Buy: " + chosenGood);
                 goods.remove(index);
                 satisfactions.remove(index);
                 continue;
@@ -420,14 +416,10 @@ public class MarketMain {
 
 
             // get total unmet need
-            double unmetNeedQuantity = 0;
+            double unmetNeedQuantity = a.getConsumption().get(chosenGood).getTotalUnmetNeed();
             // set desired quantity to 1, this will be modified if the agent is addressing unmet needs
             double desiredQuantity = 1;
-            for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
-                for (UnmetConsumption unmetConsumption : consumptionEntry.getValue().getUnmetNeeds()){
-                   unmetNeedQuantity += unmetConsumption.getMissingQuantity();
-                }
-            }
+
             // if there are unmet needs, buy more than 1 unit
             if (unmetNeedQuantity > 0){
                 // See how many of the good the Agent can afford to buy
@@ -447,24 +439,37 @@ public class MarketMain {
             m.setMoney(m.getMoney() + chosenGoodPrice * desiredQuantity);
             // remove good from Market's inventory:
 
+            //System.out.println("Market Amount of " + chosenGood + m.getInventory().get(chosenGood));
+            //System.out.println("Agent Purchasing " + purchaseAmount);
+            //System.out.println("For a cost of " + purchaseAmount * chosenGoodPrice);
             m.getInventory().put(chosenGood, m.getInventory().get(chosenGood) - purchaseAmount);
 
             // add good to Agent's inventory
             // if there are unmet needs, address them first
+            double amountRemoved = 0;
             double amountRemaining = purchaseAmount;
             if (unmetNeedQuantity > 0){
-                for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
-                    for (UnmetConsumption unmetConsumption : consumptionEntry.getValue().getUnmetNeeds()){
-                        if (amountRemaining > unmetConsumption.getMissingQuantity()){
-                            amountRemaining -= unmetConsumption.getMissingQuantity();
-                            unmetConsumption.setMissingQuantity(0);
-
-                        }
-                    }
+                // System.out.println(unmetNeedQuantity);
+                if (unmetNeedQuantity >= amountRemaining) {
+                    // if agent needs more than it bought, remove total purchased amount from unmet needs
+                    a.getConsumption().get(chosenGood).setTotalUnmetNeed(
+                            a.getConsumption().get(chosenGood).getTotalUnmetNeed() - amountRemaining);
+                    amountRemaining = 0;
                 }
+                else{
+                    // otherwise, agent purchased more than their total unmet need, so set the total unmet need
+                    // to 0 and set the remainder as the amountRemaining
+                    System.out.println(a.getConsumption().get(chosenGood));
+                    amountRemaining -= a.getConsumption().get(chosenGood).getTotalUnmetNeed();
+                    a.getConsumption().get(chosenGood).setTotalUnmetNeed(0);
+                }
+
                 a.getInventory().put(chosenGood, a.getInventory().get(chosenGood) + amountRemaining);
+                // System.out.println("Purchased " + purchaseAmount + ", Amount Remaining is: " + amountRemaining);
+                //System.out.println("Removed " + amountRemoved + "Kept " + amountRemaining + "Purchased " + purchaseAmount);
             }
             else{
+                // if there are no unmet needs, send straight to inventory
                 a.getInventory().put(chosenGood, a.getInventory().get(chosenGood) + purchaseAmount);
             }
 
@@ -525,17 +530,17 @@ public class MarketMain {
                         sumDemandIntercept += (c.getValue().getTickConsumption() * 10);
 
                         // also add sum of agent's unmet needs
-                        double sumUnmetNeeds = 0;
-                        for (UnmetConsumption u : c.getValue().getUnmetNeeds()){
-                            sumUnmetNeeds += u.getMissingQuantity();
-                        }
-                        sumDemandIntercept += sumUnmetNeeds;
 
                         break;
                     }
                 }
+                // SupplySum was adding one for every agent, regardless of profession!
+                if (a.getProfession().getJob().equals(jobType)){
+                    supplySum += a.getProfession().getPriceElasticityOfSupply();
+                    sumSupplyIntercept += 1;
+                }
 
-                supplySum = supplySum + a.getProfession().getPriceElasticityOfSupply();
+
                 // good minimum not dealt with, all production has 0 minimum across all Agents
 
                 // conditionally add to number of producers
@@ -562,6 +567,14 @@ public class MarketMain {
 
             // calculate intercept price
             // double goodPrice = (sumDemandIntercept - numOfProducers) / (0 - demandSum);
+            /*
+            //System.out.println(p.getGood());
+            //System.out.println("Supply slope sum : " + supplySum);
+            //System.out.println("Demand slope sum : " + demandSum);
+            //System.out.println(supplySum - demandSum);
+
+             */
+
             double goodPrice = (sumDemandIntercept - sumSupplyIntercept) / (supplySum - demandSum);
 
             p.setEquilibriumCost(goodPrice * p.getOriginalCost());
@@ -694,10 +707,11 @@ public class MarketMain {
 
     public static void marketSupply (Market market){
         // System.out.println(market.getProductionDifference());
-
+        /*
         for (Agent changingCareer : market.getAgents()){
             // * square root of absolute value of satisfaction
             // check if the agent is unhappy about their production;
+
             if (changingCareer.getSatisfaction() < 0){
                 // if so, get percent chance to switch
                 // derived from square root of absolute value of satisfaction
@@ -741,6 +755,7 @@ public class MarketMain {
                                 production = marketInfo.getBaseProduction();
                             }
                         }
+                        //System.out.println("Production Value (Deficit)" + production);
 
 
                         changingCareer.setProfession((new Profession(newAgentJob, 1.0,
@@ -754,10 +769,12 @@ public class MarketMain {
             }
         }
 
+         */
+
 
         // reintroduce old system for profit seeking behavior
         for (Agent a : market.getAgents()){
-            if (Math.random() < 0.1){
+            if (Math.random() < 0.01){
                 // determine agent's good
                 String agentGood = "";
                 for (JobOutput j : market.getJobOutputs()){
@@ -778,7 +795,7 @@ public class MarketMain {
                 for (Price r : market.getPrices()){
                     if (r.getCost() > agentEquilibriumPrice){
                         // if so, 10% chance to switch to that profession, 1% chance per agent per tick overall
-                        if (Math.random() < 0.01){
+                        if (Math.random() < 0.1){
                             // find matching profession, set agent's profession
                             for (JobOutput o : market.getJobOutputs()){
                                 if (o.getGood().equals(r.getGood())){
@@ -790,6 +807,7 @@ public class MarketMain {
                                             production = marketInfo.getBaseProduction();
                                         }
                                     }
+                                    //System.out.println("Production Value (Profit)" + production);
 
                                     a.setProfession((new Profession(o.getJob(), 1.0,
                                             production, 1.0, priceElasticityOfSupply)));
@@ -819,7 +837,7 @@ public class MarketMain {
                 jobsTotal.put(key, jobsTotal.get(key) + 1);
             }
         }
-        System.out.println(jobsTotal);
+        //System.out.println(jobsTotal);
     }
 
     public static void printMoney (Market market){
@@ -827,7 +845,7 @@ public class MarketMain {
         for (Agent a : market.getAgents()){
             totalMoney = totalMoney + a.getMoney();
         }
-        System.out.println(totalMoney);
+        //System.out.println(totalMoney);
     }
 
     // master controller function
@@ -874,7 +892,7 @@ public class MarketMain {
                 // double consumptionVariance = 1 + random.nextGaussian(0.0,0.07);
                 double consumptionVariance = 1 + (0.07 * Math.random());
                 agentConsumption.put(marketInfo.getGood(), new Consumption(marketInfo.getBaseConsumption()
-                        * consumptionVariance, new ArrayList<UnmetConsumption>()));
+                        * consumptionVariance, 0, new ArrayList<UnmetConsumption>()));
                 // put 5 * base good consumption of good in agent's inventory
                 agentInventory.put(marketInfo.getGood(), 5 * marketInfo.getBaseConsumption());
                 // add good priority to agent with variance (standard deviation 2.5%)
@@ -891,11 +909,17 @@ public class MarketMain {
 
             // get production
             double production = 0;
+            // Fixed Bug in v0.5.6: Reason for price spike: production was never accessed and always set to 0 on agents,
+            // meaning they wouldn't produce anything at the start!!!
+            //System.out.println("Profession Pick is " + professionPick);
             for (MarketInfo marketInfo : marketProfile) {
-                if (professionPick.equals(marketInfo.getJobName())){
+                if (professionPick.equals(marketInfo.getGood())){
+                    //System.out.println("Profession Pick is " + professionPick);
+                    //System.out.println("Taking market info from " + marketInfo.getGood());
                     production = marketInfo.getBaseProduction();
                 }
             }
+            //System.out.println("Setup Production" + production);
 
             Profession agentProfession = new Profession("", 1, production, 1.0, 1.0);
             double startingMoney = 0;
@@ -942,6 +966,80 @@ public class MarketMain {
 
     public static void main(String[] args) throws InterruptedException {
         // Define Market Profile
+        double numberOfGoods = 4;
+        MarketInfo fish = new MarketInfo("Fish", 1 / numberOfGoods, 1, -1, 0,
+                1, 1, "Fisherman", 1 / numberOfGoods);
+        MarketInfo lumber = new MarketInfo("Lumber", 1 / numberOfGoods, 1,-1, 0,
+                1, 1, "Lumberjack", 1 / numberOfGoods);
+
+        MarketInfo grain = new MarketInfo("Grain", 1 / numberOfGoods, 1, -1, 0,
+                1, 1, "Farmer", 1 / numberOfGoods);
+        MarketInfo metal = new MarketInfo("Metal", 1 / numberOfGoods, 1, -1, 0,
+                1, 1, "Blacksmith", 1 / numberOfGoods);
+
+
+
+        ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
+
+        currentMarketProfile.add(lumber);
+        currentMarketProfile.add(fish);
+        currentMarketProfile.add(grain);
+        currentMarketProfile.add(metal);
+
+        // create agents
+        ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, 12);
+        // create market
+        Market market = makeMarket(currentMarketProfile, marketAgents);
+
+        // run market a bunch to get a middle point
+        int runTimes = 0;
+        while (runTimes < 100){
+            runMarket(market, runTimes);
+            runTimes++;
+        }
+
+        /*
+        /*
+        int i = 1;
+        while (i < 2){
+            for (Agent a : market.getAgents()){
+                agentPriorities(a, market);
+                //System.out.println(a.getPriorities());
+                break;
+            }
+            i++;
+        }
+        //System.out.println(market);
+
+         */
+        System.out.println(market.getAgents().get(0).getId());
+        System.out.println("---------------------------------START---------------------------------");
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Production Satisfaction---------------------------------");
+        marketProductionSatisfaction(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Produce---------------------------------");
+        marketProduce(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Consume---------------------------------");
+        marketConsume(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Priorities---------------------------------");
+        marketPriorities(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Purchase---------------------------------");
+        marketPurchase(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Prices---------------------------------");
+        marketPrices(market);
+        System.out.println(market.getAgents().get(0));
+        System.out.println("---------------------------------Market Supply---------------------------------");
+        marketSupply(market);
+        System.out.println(market.getAgents().get(0));
+
+
+
+
 
 
 

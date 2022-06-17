@@ -25,6 +25,7 @@ public class MainInterface implements Screen {
     Market market;
     HashMap<String, Color> colorLookup;
     Label prices;
+    Label moreInfo;
     Label errorLabel;
     TextField goodField;
     TextField costField;
@@ -59,6 +60,7 @@ public class MainInterface implements Screen {
         colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
         colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
         colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+        colorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
         // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
         colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
 
@@ -138,6 +140,13 @@ public class MainInterface implements Screen {
             updateAgentPropertyGraph(agentID);
             prices.setText(market.getPrices().toString());
 
+            for (Agent a : market.getAgents()) {
+                if (a.getId().equals(agentID)){
+                    moreInfo.setText(a.toString());
+                    // System.out.println(a.getConsumption().toString());
+                }
+            }
+
         }
         priceGraph.graphLabels();
         professionGraph.graphLabels();
@@ -145,8 +154,10 @@ public class MainInterface implements Screen {
         unmetNeedGraph.graphLabels();
         // marketInventoryGraph.graphLabels();
         agentPropertyGraph.graphLabels();
+
         stage.act(delta);
         stage.draw();
+
     }
 
     @Override
@@ -201,7 +212,10 @@ public class MainInterface implements Screen {
         printButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                System.out.println(priceGraph.getDots().size());
+                // System.out.println(priceGraph.getDots().size());
+                for (Agent a : market.getAgents()){
+                    System.out.println(a.getConsumption());
+                }
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -269,6 +283,7 @@ public class MainInterface implements Screen {
     // Market instantiation
     public void instantiateMarket(){
         // set up market profile
+        /*
         MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
                 10, 1, "Fisherman", 0.4);
         MarketInfo lumber = new MarketInfo("Lumber", 0.2, 50,-0.7, 0.8,
@@ -277,11 +292,30 @@ public class MainInterface implements Screen {
                 10, 1, "Farmer", 0.4);
         MarketInfo metal = new MarketInfo("Metal", 0.10, 0.25, -1.2, 1.5,
                 10, 1, "Blacksmith", 0.05);
+
+         */
+        MarketInfo fish = new MarketInfo("Fish", 0.46, 1, -1, 0,
+                10, 1, "Fisherman", 0.5);
+        MarketInfo lumber = new MarketInfo("Lumber", 0.46, 1,-1, 0,
+                10, 1, "Lumberjack", 0.5);
+        /*
+        MarketInfo grain = new MarketInfo("Grain", 0.20, 1, -1, 1,
+                10, 1, "Farmer", 0.20);
+        MarketInfo metal = new MarketInfo("Metal", 0.20, 1, -1, 1,
+                10, 1, "Blacksmith", 0.20);
+        MarketInfo brick = new MarketInfo("Brick", 0.20, 1, -1, 1,
+                10, 1, "Mason", 0.20);
+        */
         ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
+
         currentMarketProfile.add(fish);
+
+        // currentMarketProfile.add(grain);
         currentMarketProfile.add(lumber);
-        currentMarketProfile.add(grain);
-        currentMarketProfile.add(metal);
+        // currentMarketProfile.add(metal);
+
+        // currentMarketProfile.add(brick);
+
 
 
         // create agents
@@ -290,8 +324,12 @@ public class MainInterface implements Screen {
         market = makeMarket(currentMarketProfile, marketAgents);
 
         prices = new Label ("Prices", firstSkin);
-        prices.setPosition(100, marketUI.worldHeight - 50);
+        prices.setPosition((int) (0.525 * marketUI.worldWidth), marketUI.worldHeight - 550);
         stage.addActor(prices);
+
+        moreInfo = new Label ("", firstSkin);
+        moreInfo.setPosition((int) (0.025 * marketUI.worldWidth), marketUI.worldHeight - 100);
+        stage.addActor(moreInfo);
 
     }
 
