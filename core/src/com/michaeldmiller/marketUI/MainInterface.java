@@ -28,7 +28,9 @@ public class MainInterface implements Screen {
     Label moreInfo;
     Label errorLabel;
     TextField goodField;
+    TextField consumptionField;
     TextField costField;
+    TextField consumptionCostField;
     TextField agentField;
     double scale;
     int frame;
@@ -47,7 +49,7 @@ public class MainInterface implements Screen {
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
-        //secondFraction = 1;
+        // secondFraction = 1;
         scale = 1.75;
         // set number of agents
         numberOfAgents = 2000;
@@ -274,9 +276,34 @@ public class MainInterface implements Screen {
         });
         stage.addActor(changeAgentButton);
 
+        consumptionField = new TextField("Good", firstSkin);
+        consumptionField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (7.5 * marketUI.standardButtonHeight));
+        stage.addActor(consumptionField);
+        consumptionCostField = new TextField("New Consumption", firstSkin);
+        consumptionCostField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 8 * marketUI.standardButtonHeight);
+        stage.addActor(consumptionCostField);
+
+        Button changeConsumptionButton = new TextButton("Update Consumption", firstSkin);
+        changeConsumptionButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 9* marketUI.standardButtonHeight);
+        changeConsumptionButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        changeConsumptionButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                changeConsumption();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(changeConsumptionButton);
+
         errorLabel = new Label ("Errors Here", firstSkin);
         errorLabel.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (6.5 * marketUI.standardButtonHeight));
+                marketUI.worldHeight - (int) (10 * marketUI.standardButtonHeight));
         stage.addActor(errorLabel);
 
     }
@@ -294,29 +321,33 @@ public class MainInterface implements Screen {
                 10, 1, "Blacksmith", 0.05);
 
          */
-        MarketInfo fish = new MarketInfo("Fish", 0.46, 1, -1, 0,
-                10, 1, "Fisherman", 0.5);
-        MarketInfo lumber = new MarketInfo("Lumber", 0.46, 1,-1, 0,
-                10, 1, "Lumberjack", 0.5);
-        /*
-        MarketInfo grain = new MarketInfo("Grain", 0.20, 1, -1, 1,
-                10, 1, "Farmer", 0.20);
-        MarketInfo metal = new MarketInfo("Metal", 0.20, 1, -1, 1,
-                10, 1, "Blacksmith", 0.20);
-        MarketInfo brick = new MarketInfo("Brick", 0.20, 1, -1, 1,
-                10, 1, "Mason", 0.20);
-        */
+        int numberOfGoods = 6;
+        double surplusValue = 0.01;
+        MarketInfo fish = new MarketInfo("Fish", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                1, -1, 0,10, 1,
+                "Fisherman", 1.0 / numberOfGoods);
+        MarketInfo lumber = new MarketInfo("Lumber", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                1,-1, 0, 10, 1,
+                "Lumberjack", 1.0 / numberOfGoods);
+
+        MarketInfo grain = new MarketInfo("Grain", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                1, -1, 0, 10, 1,
+                "Farmer", 1.0 / numberOfGoods);
+        MarketInfo metal = new MarketInfo("Metal", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                1, -1, 0, 10, 1,
+                "Blacksmith", 1.0 / numberOfGoods);
+        MarketInfo brick = new MarketInfo("Brick", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                1, -1, 0, 10, 1,
+                "Mason", 1.0 / numberOfGoods);
+
         ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
 
         currentMarketProfile.add(fish);
-
-        // currentMarketProfile.add(grain);
         currentMarketProfile.add(lumber);
-        // currentMarketProfile.add(metal);
 
-        // currentMarketProfile.add(brick);
-
-
+        currentMarketProfile.add(grain);
+        currentMarketProfile.add(metal);
+        currentMarketProfile.add(brick);
 
         // create agents
         ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
@@ -357,6 +388,29 @@ public class MainInterface implements Screen {
             }
         }
     }
+
+    public void changeConsumption(){
+        // given information in good and cost text fields, attempt to change the corresponding cost in the market
+        boolean costOK = false;
+        double consumptionValue = 0;
+        String good = consumptionField.getText();
+        String cost = consumptionCostField.getText();
+
+        // make sure the user entered value is an integer
+        try{
+            consumptionValue = Double.parseDouble(cost);
+            costOK = true;
+        } catch (NumberFormatException e){
+            errorLabel.setText("Not a valid consumption!");
+        }
+        // if value is ok, set the matching consumption of each agent to the new consumption value
+        if (costOK){
+            for (Agent a : market.getAgents()){
+                a.getConsumption().get(good).setTickConsumption(consumptionValue);
+            }
+        }
+    }
+
     public void changeAgent(){
         // given information in good and cost text fields, attempt to change the corresponding cost in the market
         String proposedAgentID = agentField.getText();
@@ -451,18 +505,15 @@ public class MainInterface implements Screen {
         unmetNeedGraph.setFrame(frame);
 
         HashMap<String, Double> unmetNeedTotal = new HashMap<String, Double>();
-        // get total amount of unmet needs by looping through each unmet need list in each good for each agent
-        // this feels like it is extremely performance intensive!
+        // update 0.2.7: reflecting removal of performance intensive individual unmet needs, just grab the new agent total
         for (Agent a : market.getAgents()){
             for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
-                for (UnmetConsumption unmetConsumption : consumptionEntry.getValue().getUnmetNeeds()){
-                    if (!unmetNeedTotal.containsKey(consumptionEntry.getKey())){
-                        unmetNeedTotal.put(consumptionEntry.getKey(), unmetConsumption.getMissingQuantity());
-                    }
-                    else {
-                        String key = consumptionEntry.getKey();
-                        unmetNeedTotal.put(key, unmetNeedTotal.get(key) + unmetConsumption.getMissingQuantity());
-                    }
+                if (!unmetNeedTotal.containsKey(consumptionEntry.getKey())){
+                    unmetNeedTotal.put(consumptionEntry.getKey(), consumptionEntry.getValue().getTotalUnmetNeed());
+                }
+                else {
+                    String key = consumptionEntry.getKey();
+                    unmetNeedTotal.put(key, unmetNeedTotal.get(key) + consumptionEntry.getValue().getTotalUnmetNeed());
                 }
             }
         }
