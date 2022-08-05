@@ -543,12 +543,14 @@ public class MarketMain {
 
                         // double maximumUnmetGoodNeed = c.getValue().getTotalUnmetNeed();
                         // maximumUnmetGoodNeed = Math.min(maximumUnmetGoodNeed, c.getValue().getTickConsumption() * 100);
+
+                        // double totalMoney = a.getMoney();
+                        // sumDemandIntercept += Math.min(maximumUnmetGoodNeed, totalMoney);
+
+                        // scale demand by square root of unmet needs (to prevent extreme runaway inflation)
                         double maximumUnmetGoodNeed = Math.sqrt(c.getValue().getTotalUnmetNeed());
 
-                        double totalMoney = a.getMoney();
-                        // sumDemandIntercept += Math.min(maximumUnmetGoodNeed, totalMoney);
                         sumDemandIntercept += maximumUnmetGoodNeed;
-
                         break;
                     }
                 }
@@ -851,6 +853,7 @@ public class MarketMain {
                 }
             }
         }
+        // discarded fix: market aware profit
         // need market-aware profit. Not a forced equilibrium, but agents need to be able to seek profit, not just
         // react to it. Current behavior creates overproduction. Demand increases in response to unmet need
 

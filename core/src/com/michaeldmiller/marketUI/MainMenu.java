@@ -39,6 +39,23 @@ public class MainMenu implements Screen {
         });
         stage.addActor(startButton);
 
+        Button temporaryCreatorButton = new TextButton("Temporary Creator", firstSkin);
+        temporaryCreatorButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.standardButtonHeight);
+        temporaryCreatorButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        temporaryCreatorButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                marketUI.setScreen(marketUI.creatorScreen);
+                dispose();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(temporaryCreatorButton);
+
         Button creditsButton = new TextButton("Credits", firstSkin);
         creditsButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
                 0);
