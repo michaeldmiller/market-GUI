@@ -2,9 +2,7 @@ package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -33,21 +31,14 @@ public class MarketCreationScreen implements Screen {
         masterTable.top().left();
         masterTable.padTop(10);
         // enable debugging for design purposes
-        masterTable.setDebug(true);
-
-
+        // masterTable.setDebug(true);
 
         // create labels
-        Label title = new Label("Market Creator:", firstSkin);
-        Label title2 = new Label("Market Creator:", firstSkin);
-        title2.setSize(100, 1000);
-        Label title3 = new Label("Market Creator:", firstSkin);
-        title3.setSize(100, 1000);
+        Label title = new Label("Market Creator", firstSkin);
 
         // information label, wrap is true for multiple information lines
-        infoLabel = new Label("Information", firstSkin);
+        infoLabel = new Label(" -------------Information-------------", firstSkin);
         infoLabel.setWrap(true);
-
 
         // create menu button
         Button menuButton = new TextButton("Menu", firstSkin);
@@ -62,9 +53,16 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        // add the button to the first row
-        masterTable.add();
-        masterTable.add(menuButton).expandX().top().right();
+
+        // add the title and button to the first row
+        Table titleInstructions = new Table();
+        titleInstructions.add(title).padLeft(50);
+        titleInstructions.add().expand();
+        titleInstructions.add(createInstructions());
+        masterTable.add(titleInstructions).align(Align.left).fill();
+
+
+        masterTable.add(menuButton).top().right().width(100);
         masterTable.row();
 
         // create vertical group, for adding and removing good properties
@@ -88,35 +86,117 @@ public class MarketCreationScreen implements Screen {
         // create labels
         marketGoods.addActor(createCategoryLabels());
 
-        // create scroll pane
-        ScrollPane testPane = new ScrollPane(marketGoods);
+        // create scroll pane for goods
+        ScrollPane goodsScrollPane = new ScrollPane(marketGoods);
         // set to fill whole rest of the screen (might be changed later), align to the top
-        masterTable.add(testPane).expandY().top();
+        masterTable.add(goodsScrollPane).expandY().top();
 
         // info box, add information label
-        masterTable.add(infoLabel).width(250).center().top();
-    }
-    public Table createCategoryLabels(){
-        // create labels and information toggle buttons for the market info categories
-        Table labels = new Table();
+        // create scroll pane
+        ScrollPane informationScrollPane = new ScrollPane(infoLabel);
+        masterTable.add(informationScrollPane).width(250).center().top();
 
-        // good name label
-        Label name = new Label ("Good Name", firstSkin);
-        labels.add(name);
-        // info button
-        TextButton nameButton = new TextButton("I", firstSkin);
-        nameButton.addListener(new InputListener(){
+        // add bottom row
+        masterTable.row();
+        // left align
+        // masterTable.add(createBottomRow()).align(Align.left).top().padLeft(10);
+        // center align
+        masterTable.add(createBottomRow()).top();
+
+    }
+    public Table createInstructions(){
+        // create output table
+        Table instructionsTable = new Table();
+
+        // create instruction button
+        Button instructionsButton = new TextButton(" Instructions ", firstSkin);
+        instructionsButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("This is the basic name of the good.");
+                infoLabel.setText("Instructions:\n" + "Welcome to the MarketUI. MarketUI dynamically simulates " +
+                        "a virtual marketplace with autonomous agents, which produce and consume goods and then buy " +
+                        "and sell them to one another according to basic real world motivations of needs and a " +
+                        "desire for profit. Governed by the real laws of microeconomics through supply and demand " +
+                        "forces, MarketUI demonstrates the power of simple rules to create emergent behaviors akin " +
+                        "to those found in the real world.\n" +
+                        "This is the creation screen for the virtual market to be simulated. A market consists of a " +
+                        "number of agents (button on the bottom of your screen) working with a number of goods. " +
+                        "Click on the add good button, towards the middle of your screen, to add at least one good. " +
+                        "When you do this, several boxes will appear with space to provide specific information " +
+                        "about that good. Click on the information boxes associated with each to learn more about "+
+                        "them. When you are done, click the create button in the bottom right to create the market" +
+                        "and begin simulating it. Thank you for using MarketUI.\n");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
                 return true;
             }
         });
-        labels.add(nameButton).padRight(25);
+        instructionsTable.add(instructionsButton);
+
+        return instructionsTable;
+    }
+
+    public VerticalGroup createBottomRow(){
+        // create output group
+        VerticalGroup bottomRow = new VerticalGroup();
+        // create the two tables, one for the labels and info buttons, one for the actual
+        Table bottomRowLabels = new Table();
+        Table bottomRowInteractive = new Table();
+        bottomRow.addActor(bottomRowLabels);
+        bottomRow.addActor(bottomRowInteractive);
+
+        // create field for number of Agents, prefilled to 2000
+        Label numberOfAgents = new Label ("# of Agents", firstSkin);
+        bottomRowLabels.add(numberOfAgents).padLeft(20);
+        // info button
+        TextButton numberOfAgentsButton = new TextButton("I", firstSkin);
+        numberOfAgentsButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Number of Agents:\n" + "This value is the number of agents present in the " +
+                        "market simulation. A larger number of agents increases the detail of the simulation, at " +
+                        "the cost of performance. Only a hundred or so are necessary for a fairly detailed " +
+                        "simulation, though at least a thousand is better. At the moment, no multithreading " +
+                        "is implemented, on an i7-8700k utilizing a single core, 2000 agents nears the upper " +
+                        "performance limit.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        bottomRowLabels.add(numberOfAgentsButton).expandX();
+
+        TextField numberOfAgentsField = new TextField("2000", firstSkin);
+        bottomRowInteractive.add(numberOfAgentsField).expandX();
+
+        return bottomRow;
+    }
+
+    public Table createCategoryLabels(){
+        // create labels and information toggle buttons for the market info categories
+        Table labels = new Table();
+
+        // good name label
+        Label name = new Label ("Good Name", firstSkin);
+        labels.add(name).padLeft(20);
+        // info button
+        TextButton nameButton = new TextButton("I", firstSkin);
+        nameButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Good Name:\n" + "This is the name of the good, e.g. Lumber, Metal, or Fish.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        labels.add(nameButton).padRight(20);
 
 
         // good consumption label
@@ -167,7 +247,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(productionButton).padRight(35);
+        labels.add(productionButton).padRight(40);
 
         // price elasticity label
         Label priceElasticity = new Label ("Price Elasticities", firstSkin);
@@ -238,7 +318,8 @@ public class MarketCreationScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("This is the name of the profession associated with producing this good, e.g. " +
+                infoLabel.setText("Profession Name:\n" +
+                        "This is the name of the profession associated with producing this good, e.g. " +
                         "a fisherman produces fish and a farmer produces grain.");
             }
             @Override
@@ -257,7 +338,8 @@ public class MarketCreationScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("This is the chance that an agent in the market will have the profession which " +
+                infoLabel.setText("Job Chance:\n" +
+                        "This is the chance that an agent in the market will have the profession which " +
                         "produces the specified good at the start of the simulation. The system which makes this " +
                         "random choice works based upon the ratios between the given values and will therefore work " +
                         "for any number. However, to understand the choice it is making, it is best to make sure " +
@@ -270,9 +352,6 @@ public class MarketCreationScreen implements Screen {
             }
         });
         labels.add(chanceButton).padRight(140);
-
-
-
 
 
         return labels;
