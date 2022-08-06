@@ -8,6 +8,10 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.michaeldmiller.economicagents.MarketInfo;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class MarketCreationScreen implements Screen {
     final MarketUI marketUI;
@@ -16,12 +20,14 @@ public class MarketCreationScreen implements Screen {
     VerticalGroup marketGoods;
     Skin firstSkin;
     Label infoLabel;
+    ArrayList<MarketInfo> currentMarketProfile;
 
     public MarketCreationScreen(final MarketUI marketUI) {
         // initialize the marketUI property, stage, and button skin
         this.marketUI = marketUI;
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
+        currentMarketProfile = new ArrayList<MarketInfo>();
 
         // create the main UI table
         masterTable = new Table();
@@ -93,7 +99,7 @@ public class MarketCreationScreen implements Screen {
 
         // info box, add information label
         // create scroll pane
-        ScrollPane informationScrollPane = new ScrollPane(infoLabel);
+        final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
         masterTable.add(informationScrollPane).width(250).center().top();
 
         // add bottom row
@@ -103,6 +109,208 @@ public class MarketCreationScreen implements Screen {
         // center align
         masterTable.add(createBottomRow()).top();
 
+        // add create button
+        Button createButton = new TextButton("Create", firstSkin);
+        createButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // loop through market good table
+                int i = 0;
+                StringBuilder errorText = new StringBuilder();
+                errorText.append("Error(s):\n");
+                ArrayList<MarketInfo> marketInfoAccumulation = new ArrayList<>();
+                for (Actor actor : marketGoods.getChildren()){
+                    // ignore the first two
+                    if (!(i <= 1)){
+                        // cast to table, as it is known everything after the first two is a data table for a good
+                        Table t = (Table) actor;
+                        // create error text, which will display the location of any errors
+
+                        int currentGoodNum = i - 1;
+
+                        // get the children, i.e. the fields about the good information
+
+                        // store text from the good field as the good's name
+                        TextField goodField = (TextField) t.getChild(0);
+                        String goodName = goodField.getText();
+
+                        // get the base consumption, reject if it is not a number or less than zero.
+                        TextField consumptionField = (TextField) t.getChild(1);
+                        double baseConsumption = 0;
+                        try{
+                            baseConsumption = Double.parseDouble(consumptionField.getText());
+                            if (baseConsumption < 0){
+                                throw new IllegalArgumentException();
+                            }
+                        } catch(NumberFormatException e){
+                            errorText.append(String.format("The base consumption of good %d (%s) must be a number.\n",
+                                    currentGoodNum, goodName));
+                        } catch(IllegalArgumentException e){
+                            errorText.append(String.format("The base consumption of good %d (%s) must be positive.\n",
+                                    currentGoodNum, goodName));
+                        }
+
+                        // get the base production, reject if it is not a number or less than zero.
+                        TextField productionField = (TextField) t.getChild(2);
+                        double baseProduction = 0;
+                        try{
+                            baseProduction = Double.parseDouble(productionField.getText());
+                            if (baseProduction < 0) {
+                                throw new IllegalArgumentException();
+                            }
+                        } catch(NumberFormatException e){
+                            errorText.append(String.format("The base production of good %d (%s) must be a number.\n",
+                                    currentGoodNum, goodName));
+                        } catch(IllegalArgumentException e){
+                            errorText.append(String.format("The base production of good %d (%s) must be positive.\n",
+                                    currentGoodNum, goodName));
+                        }
+
+
+                        // get the elasticities, no checks required here as the slider and selector limit
+                        // the possible user inputs
+                        // index 3 is the label for the slider, skip to 4
+                        Slider demandElasticitySlider = (Slider) t.getChild(4);
+                        double demandElasticity = demandElasticitySlider.getValue();
+
+
+                        // despite complaints, the value at index 5 is in fact a select box of integers
+                        @SuppressWarnings("unchecked") SelectBox<Integer> supplyElasticityBox =
+                                (SelectBox<Integer>) t.getChild(5);
+                        double supplyElasticity = supplyElasticityBox.getSelected();
+
+                        // get the base cost, reject if it is not a number or less than zero.
+                        TextField baseCostField = (TextField) t.getChild(6);
+                        double baseCost = 0;
+                        try{
+                            baseCost = Double.parseDouble(baseCostField.getText());
+                            if (baseConsumption < 0){
+                                throw new IllegalArgumentException();
+                            }
+                        } catch(NumberFormatException e){
+                            errorText.append(String.format("The base cost of good %d (%s) must be a number.\n",
+                                    currentGoodNum, goodName));
+                        } catch(IllegalArgumentException e){
+                            errorText.append(String.format("The base cost of good %d (%s) must be positive.\n",
+                                    currentGoodNum, goodName));
+                        }
+
+
+                        // get the base weight, no check required due to the select box limit on the possible
+                        // user inputs
+                        // despite complaints, the value at index 7 is in fact a select box of integers
+                        @SuppressWarnings("unchecked") SelectBox<Integer> baseWeightBox =
+                                (SelectBox<Integer>) t.getChild(7);
+                        double baseWeight = supplyElasticityBox.getSelected();
+
+                        // get the job name
+                        TextField jobNameField = (TextField) t.getChild(8);
+                        String jobName = jobNameField.getText();
+
+                        // get the job chance, slider ensures all values are valid
+                        // skip index 9, as it is occupied by the label for the job chance
+                        Slider jobChanceSlider = (Slider) t.getChild(10);
+                        double jobChance = jobChanceSlider.getValue();
+
+                        // with reasonable values, create a market info object for the good
+                        MarketInfo marketInfo = new MarketInfo(goodName, baseConsumption, baseProduction,
+                                demandElasticity, supplyElasticity, baseCost, baseWeight,
+                                jobName, jobChance);
+                        marketInfoAccumulation.add(marketInfo);
+
+
+                    }
+                    // increment counter
+                    i++;
+                }
+                // prevent repeats by checking for duplicates
+                // create list of good and job names
+                ArrayList<String> goodNames = new ArrayList<>();
+                ArrayList<String> jobNames = new ArrayList<>();
+                for (MarketInfo currentMarketProperty : marketInfoAccumulation){
+                    goodNames.add(currentMarketProperty.getGood());
+                    jobNames.add(currentMarketProperty.getJobName());
+                }
+                // check to see if there are any goods at all, create an error message if there are none
+                if (goodNames.size() == 0){
+                    errorText.append("Please add at least one good.\n");
+                }
+                // create a hash set for names, then loop through the good names. If it cannot be added to the set,
+                // i.e. if there is a duplicate, report the failure and the current good number as an error to the
+                // error text.
+                HashSet<String> goodNameSet = new HashSet<>();
+                int placeCountNames = 1;
+                for (String name : goodNames){
+                    boolean goodNotThere = goodNameSet.add(name);
+                    if (!goodNotThere){
+                        errorText.append(String.format("Good %d (%s) cannot be named this, as the name has already " +
+                                        "been used.\n", placeCountNames, name));
+                    }
+                    placeCountNames++;
+                }
+                // do the same operation as above for the job/profession names
+                HashSet<String> jobNameSet = new HashSet<>();
+                int placeCountJobs = 1;
+                for (String job : jobNames){
+                    boolean jobNotThere = jobNameSet.add(job);
+                    if (!jobNotThere){
+                        errorText.append(String.format("Job %d (%s) cannot be named this, as the name has already " +
+                                "been used.\n", placeCountJobs, job));
+                    }
+                    placeCountJobs++;
+                }
+
+                // check to make sure the sum of the job chances is not 0, create an error text if the sum is 0.
+                double jobChanceSum = 0;
+                for (MarketInfo currentMarketInfo : marketInfoAccumulation){
+                    jobChanceSum += currentMarketInfo.getJobChance();
+                }
+                // if there was no good added, do not print the error message
+                if (jobChanceSum == 0 && jobNames.size() != 0){
+                    errorText.append("At least one good must have a job chance greater than 0.\n");
+                }
+
+                // get the number of agents
+                VerticalGroup bottomRow = (VerticalGroup) masterTable.getChild(4);
+                Table interactiveBottomRow = (Table) bottomRow.getChild(1);
+                TextField numberOfAgentsField = (TextField) interactiveBottomRow.getChild(0);
+                int numberOfAgents = 0;
+                try{
+                    numberOfAgents = Integer.parseInt(numberOfAgentsField.getText());
+                    if (numberOfAgents < 0){
+                        throw new IllegalArgumentException();
+                    }
+                } catch(NumberFormatException e){
+                    errorText.append("The number of agents must be a number.\n");
+                } catch(IllegalArgumentException e){
+                    errorText.append("The number of agents must be positive.\n");
+                }
+
+                // finally, if there were no errors (i.e. the error text is still its initial value), create the
+                // market, otherwise, set the information box to show the encountered errors
+                if(errorText.toString().equals("Error(s):\n")){
+                    // set the market information
+                    currentMarketProfile = marketInfoAccumulation;
+                    // create a new main interface screen using the new market profile
+                    marketUI.mainInterface = new MainInterface(marketUI, numberOfAgents, currentMarketProfile);
+                    // if a market did not exist before, refresh the main menu to include an enabled resume button
+                    if (!marketUI.marketExists){
+                        marketUI.marketExists = true;
+                        marketUI.mainMenu = new MainMenu(marketUI);
+                    }
+                    // set the current screen to the main interface
+                    marketUI.setScreen(marketUI.mainInterface);
+                } else{
+                    // otherwise, display the error text in the info box
+                    infoLabel.setText(errorText.toString());
+                }
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        masterTable.add(createButton);
     }
     public Table createInstructions(){
         // create output table
@@ -282,44 +490,48 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(priceElasticityButton).padRight(50);
+        labels.add(priceElasticityButton).padRight(65);
 
         // good base cost label
-        Label baseCost = new Label ("Base Cost", firstSkin);
-        labels.add(baseCost);
+        Label baseValues = new Label ("Base Values", firstSkin);
+        labels.add(baseValues);
         // info button
-        TextButton baseCostButton = new TextButton("I", firstSkin);
-        baseCostButton.addListener(new InputListener(){
+        TextButton baseValuesButton = new TextButton("I", firstSkin);
+        baseValuesButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Base Cost:\n" +
-                        "This value is a multiplier which represents a user defined offset in the intrinsic " +
-                        "worth assigned to a good. It cannot be negative.\n" +
-                        "In practice, it is best to set all base costs in a market to the " +
+                infoLabel.setText("Base Cost and Weight:\n" +
+                        "These values are multipliers which represents user defined offsets in the intrinsic " +
+                        "worth assigned to a good. They cannot be negative.\n" +
+                        "In practice, it is best to set all base values in a market to the " +
                         "same value. If they are different, the market has a very difficult time finding " +
-                        "equilibrium, as agents will habitually prefer goods with higher base costs without any" +
-                        "kind of justification internal to the market.\nIt is strongly recommended that this value " +
-                        "be set to 10 for all goods.");
+                        "equilibrium, as agents will habitually prefer goods with higher base values without any" +
+                        "kind of justification internal to the market.\n" +
+                        "Base Cost is set with the entry box on the left, and Base Weight is set with the drop down " +
+                        "box on the right, at present the only possible option is 1. Base cost is applied uniformly" +
+                        "to offset the price of all goods, while the base weight sets the agents' buying priority" +
+                        "multiplier.\n" +
+                        "It is strongly recommended that base cost be set to 10 for all goods.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
                 return true;
             }
         });
-        labels.add(baseCostButton).padRight(30);
+        labels.add(baseValuesButton).padRight(70);
 
-        // good profession label
-        Label profession = new Label ("Profession Name", firstSkin);
-        labels.add(profession);
+        // good job name label
+        Label jobName = new Label ("Job Name", firstSkin);
+        labels.add(jobName);
         // info button
-        TextButton professionButton = new TextButton("I", firstSkin);
-        professionButton.addListener(new InputListener(){
+        TextButton jobNameButton = new TextButton("I", firstSkin);
+        jobNameButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Profession Name:\n" +
-                        "This is the name of the profession associated with producing this good, e.g. " +
+                infoLabel.setText("Job Name:\n" +
+                        "This is the name of the job or profession associated with producing this good, e.g. " +
                         "a fisherman produces fish and a farmer produces grain.");
             }
             @Override
@@ -327,7 +539,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(professionButton).padRight(30);
+        labels.add(jobNameButton).padRight(55);
 
         // job chance label
         Label chance = new Label ("Job Chance", firstSkin);
@@ -351,7 +563,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(chanceButton).padRight(140);
+        labels.add(chanceButton).padRight(120);
 
 
         return labels;
@@ -403,9 +615,16 @@ public class MarketCreationScreen implements Screen {
         TextField baseCost = new TextField("Base Cost", firstSkin);
         good.add(baseCost).padRight(10);
 
-        // get profession name
-        TextField professionName = new TextField("Profession Name", firstSkin);
-        good.add(professionName).padRight(10);
+        // get base good weight
+        SelectBox<Integer> baseWeight = new SelectBox<>(firstSkin);
+        Array<Integer> weightChoices = new Array<>();
+        weightChoices.add(1);
+        baseWeight.setItems(weightChoices);
+        good.add(baseWeight).padRight(10);
+
+        // get job name
+        TextField jobName = new TextField("Job Name", firstSkin);
+        good.add(jobName).padRight(25);
 
         // get job chance (between 0 and 1)
         final Label jobChanceLabel = new Label("0", firstSkin);
@@ -428,7 +647,7 @@ public class MarketCreationScreen implements Screen {
 
 
         // remove button
-        Button remove = new TextButton("Remove Good", firstSkin);
+        Button remove = new TextButton("Remove", firstSkin);
         good.add(remove);
         remove.addListener(new InputListener(){
             @Override

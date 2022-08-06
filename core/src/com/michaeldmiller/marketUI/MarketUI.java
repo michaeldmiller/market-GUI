@@ -14,6 +14,7 @@ public class MarketUI extends Game {
 	public int worldHeight;
 	public int standardButtonWidth = 150;
 	public int standardButtonHeight = 50;
+	public boolean marketExists = false;
 	
 	@Override
 	public void create () {
@@ -24,7 +25,6 @@ public class MarketUI extends Game {
 
 
 		mainMenu = new MainMenu(this);
-		mainInterface = new MainInterface(this);
 		creditsScreen = new CreditsScreen(this);
 		creatorScreen = new MarketCreationScreen(this);
 

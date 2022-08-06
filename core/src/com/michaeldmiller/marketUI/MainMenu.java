@@ -29,7 +29,7 @@ public class MainMenu implements Screen {
         startButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketUI.setScreen(marketUI.mainInterface);
+                marketUI.setScreen(marketUI.creatorScreen);
                 dispose();
             }
             @Override
@@ -39,22 +39,25 @@ public class MainMenu implements Screen {
         });
         stage.addActor(startButton);
 
-        Button temporaryCreatorButton = new TextButton("Temporary Creator", firstSkin);
-        temporaryCreatorButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.standardButtonHeight);
-        temporaryCreatorButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        temporaryCreatorButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketUI.setScreen(marketUI.creatorScreen);
-                dispose();
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(temporaryCreatorButton);
+        if(marketUI.marketExists){
+            Button temporaryCreatorButton = new TextButton("Resume Market", firstSkin);
+            temporaryCreatorButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                    marketUI.standardButtonHeight);
+            temporaryCreatorButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+            temporaryCreatorButton.addListener(new InputListener(){
+                @Override
+                public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                    marketUI.setScreen(marketUI.mainInterface);
+                    dispose();
+                }
+                @Override
+                public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                    return true;
+                }
+            });
+            stage.addActor(temporaryCreatorButton);
+        }
+
 
         Button creditsButton = new TextButton("Credits", firstSkin);
         creditsButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,

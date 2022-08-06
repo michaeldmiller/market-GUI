@@ -23,6 +23,7 @@ public class MainInterface implements Screen {
     Stage stage;
     Skin firstSkin;
     Market market;
+    ArrayList<MarketInfo> currentMarketProfile;
     HashMap<String, Color> colorLookup;
     Label prices;
     Label moreInfo;
@@ -44,7 +45,8 @@ public class MainInterface implements Screen {
     ScrollingGraph agentPropertyGraph;
     String agentID;
 
-    public MainInterface (final MarketUI marketUI) {
+    public MainInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
+                          ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
         firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
         frame = 0;
@@ -52,10 +54,12 @@ public class MainInterface implements Screen {
         // secondFraction = 1;
         scale = 1.75;
         // set number of agents
-        numberOfAgents = 2000;
+        numberOfAgents = specifiedNumberOfAgents;
+        currentMarketProfile = specifiedMarketProfile;
         // set initial agent
         agentID = "1";
 
+        // TODO: Add dynamic color lookup
         // setup color lookup table
         colorLookup = new HashMap<String, Color>();
         colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
@@ -310,46 +314,6 @@ public class MainInterface implements Screen {
     }
     // Market instantiation
     public void instantiateMarket(){
-        // set up market profile
-        /*
-        MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
-                10, 1, "Fisherman", 0.4);
-        MarketInfo lumber = new MarketInfo("Lumber", 0.2, 50,-0.7, 0.8,
-                10, 1, "Lumberjack", 0.2);
-        MarketInfo grain = new MarketInfo("Grain", 0.45, 1.5, -0.5, 0.4,
-                10, 1, "Farmer", 0.4);
-        MarketInfo metal = new MarketInfo("Metal", 0.10, 0.25, -1.2, 1.5,
-                10, 1, "Blacksmith", 0.05);
-
-         */
-        int numberOfGoods = 6;
-        double surplusValue = 0.01;
-        MarketInfo fish = new MarketInfo("Fish", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                1, -1, 0,10, 1,
-                "Fisherman", 1.0 / numberOfGoods);
-        MarketInfo lumber = new MarketInfo("Lumber", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                1,-1, 0, 10, 1,
-                "Lumberjack", 1.0 / numberOfGoods);
-
-        MarketInfo grain = new MarketInfo("Grain", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                1, -1, 0, 10, 1,
-                "Farmer", 1.0 / numberOfGoods);
-        MarketInfo metal = new MarketInfo("Metal", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                1, -1, 0, 10, 1,
-                "Blacksmith", 1.0 / numberOfGoods);
-        MarketInfo brick = new MarketInfo("Brick", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                1, -1, 0, 10, 1,
-                "Mason", 1.0 / numberOfGoods);
-
-        ArrayList<MarketInfo> currentMarketProfile = new ArrayList<MarketInfo>();
-
-        currentMarketProfile.add(fish);
-        currentMarketProfile.add(lumber);
-
-        currentMarketProfile.add(grain);
-        currentMarketProfile.add(metal);
-        currentMarketProfile.add(brick);
-
         // create agents
         ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
         // create market

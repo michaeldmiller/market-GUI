@@ -64,7 +64,7 @@ public class MarketInfo {
     public String toString() {
         return ("Good: " + this.getGood() + ", " +
                 "Base Consumption: " + this.getBaseConsumption() + ", " +
-                "Base Production: " + this.getBaseConsumption() + ", " +
+                "Base Production: " + this.getBaseProduction() + ", " +
                 "Demand Elasticity: " + this.getPriceElasticityDemand() + ", " +
                 "Supply Elasticity: " + this.getPriceElasticitySupply() + ", " +
                 "Good Cost: " + this.getGoodCost() + ", " +
