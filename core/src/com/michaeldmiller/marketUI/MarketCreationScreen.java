@@ -333,8 +333,9 @@ public class MarketCreationScreen implements Screen {
                         "Click on the add good button, towards the middle of your screen, to add at least one good. " +
                         "When you do this, several boxes will appear with space to provide specific information " +
                         "about that good. Click on the information boxes associated with each to learn more about "+
-                        "them. When you are done, click the create button in the bottom right to create the market" +
-                        "and begin simulating it. Thank you for using MarketUI.\n");
+                        "them. When you are done, click the create button in the bottom right to create the market " +
+                        "and begin simulating it. Alternatively, click on a preset to use a prebuilt market and begin " +
+                        "simulating right away. Thank you for using MarketUI.\n");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -376,10 +377,119 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        bottomRowLabels.add(numberOfAgentsButton).expandX();
+        bottomRowLabels.add(numberOfAgentsButton).padRight(50);
 
         TextField numberOfAgentsField = new TextField("2000", firstSkin);
-        bottomRowInteractive.add(numberOfAgentsField).expandX();
+        bottomRowInteractive.add(numberOfAgentsField).padRight(50);
+
+        // create first preset button
+        Label preset1Label = new Label("Preset 1", firstSkin);
+        bottomRowLabels.add(preset1Label).padLeft(20).padRight(5);
+        // info button
+        TextButton preset1InfoButton = new TextButton("I", firstSkin);
+        preset1InfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Preset 1:\n" + "The first preset. Using a preset will start the simulation using " +
+                        "one of a few predefined markets. Preset 1 is a balanced market of five goods: Fish, " +
+                        "Lumber, Grain, Metal, and Brick, each of which is functionally identical with one another; " +
+                        "i.e. they are all produced and consumed at the same rate and prioritized equally. There is a " +
+                        "small surplus in the market, and production is distributed proportionally on initialization " +
+                        "so that the market starts in a stable equilibrium. It is a great entry point, to get used to " +
+                        "how the simulation works and get used to the different display and control options that " +
+                        "are available. It is also an excellent platform to demonstrate the effects of modifying " +
+                        "various market attributes with the modification tools in the main interface. Note: " +
+                        "to respond better to differing performance requirements, presets still use a " +
+                        "custom number of agents, as specified in the box to the left of the presets.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        bottomRowLabels.add(preset1InfoButton);
+
+        Button preset1CreateButton = new TextButton("Use Preset", firstSkin);
+        preset1CreateButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // preset values
+                int numberOfGoods = 6;
+                double surplusValue = 0.01;
+                MarketInfo fish = new MarketInfo("Fish", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                        1, -1, 0,10, 1,
+                        "Fisherman", 1.0 / numberOfGoods);
+                MarketInfo lumber = new MarketInfo("Lumber", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                        1,-1, 0, 10, 1,
+                        "Lumberjack", 1.0 / numberOfGoods);
+                MarketInfo grain = new MarketInfo("Grain", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                        1, -1, 0, 10, 1,
+                        "Farmer", 1.0 / numberOfGoods);
+                MarketInfo metal = new MarketInfo("Metal", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                        1, -1, 0, 10, 1,
+                        "Blacksmith", 1.0 / numberOfGoods);
+                MarketInfo brick = new MarketInfo("Brick", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
+                        1, -1, 0, 10, 1,
+                        "Mason", 1.0 / numberOfGoods);
+                ArrayList<MarketInfo> preset1MarketProfile = new ArrayList<MarketInfo>();
+
+                preset1MarketProfile.add(fish);
+                preset1MarketProfile.add(lumber);
+                preset1MarketProfile.add(grain);
+                preset1MarketProfile.add(metal);
+                preset1MarketProfile.add(brick);
+
+                // overwrite current market profile
+                currentMarketProfile = preset1MarketProfile;
+
+                StringBuilder errorText = new StringBuilder();
+                errorText.append("Error(s):\n");
+                // get the number of agents
+                VerticalGroup bottomRow = (VerticalGroup) masterTable.getChild(4);
+                Table interactiveBottomRow = (Table) bottomRow.getChild(1);
+                TextField numberOfAgentsField = (TextField) interactiveBottomRow.getChild(0);
+                int numberOfAgents = 0;
+                try{
+                    numberOfAgents = Integer.parseInt(numberOfAgentsField.getText());
+                    if (numberOfAgents < 0){
+                        throw new IllegalArgumentException();
+                    }
+                } catch(NumberFormatException e){
+                    errorText.append("The number of agents must be a number.\n");
+                } catch(IllegalArgumentException e){
+                    errorText.append("The number of agents must be positive.\n");
+                }
+
+                // if there were no errors (i.e. the error text is still its initial value), create the market,
+                // otherwise, set the information box to show the encountered error
+                if(errorText.toString().equals("Error(s):\n")){
+                    // create a new main interface screen using the new market profile
+                    marketUI.mainInterface = new MainInterface(marketUI, numberOfAgents, currentMarketProfile);
+                    // if a market did not exist before, refresh the main menu to include an enabled resume button
+                    if (!marketUI.marketExists){
+                        marketUI.marketExists = true;
+                        marketUI.mainMenu = new MainMenu(marketUI);
+                    }
+                    // set the current screen to the main interface
+                    marketUI.setScreen(marketUI.mainInterface);
+                } else{
+                    // otherwise, display the error text in the info box
+                    infoLabel.setText(errorText.toString());
+                }
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        bottomRowInteractive.add(preset1CreateButton);
+
+
+
+
+
 
         return bottomRow;
     }
@@ -555,7 +665,7 @@ public class MarketCreationScreen implements Screen {
                         "produces the specified good at the start of the simulation. The system which makes this " +
                         "random choice works based upon the ratios between the given values and will therefore work " +
                         "for any number. However, to understand the choice it is making, it is best to make sure " +
-                        "that the sum of all of these values is 1. In that case, the job chance can be read as the" +
+                        "that the sum of all of these values is 1. In that case, the job chance can be read as the " +
                         "percent chance each agent will have the given profession.");
             }
             @Override
