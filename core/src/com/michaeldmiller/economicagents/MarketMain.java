@@ -486,8 +486,18 @@ public class MarketMain {
         }
 
     public static void marketPurchase (Market m){
-        for (Agent a : m.getAgents()){
-            agentPurchase(a, m);
+        // random purchase order
+        // pick a random number between 2 and the number of agents
+        int numberOfAgents = m.getAgents().size();
+        Random random = new Random();
+        int pick = random.nextInt(0, numberOfAgents - 1);
+        // with pick in hand, use two standard for loops, looping from the pick to the end, and then
+        // from the first agent to the pick.
+        for (int firstCounter = pick; firstCounter < numberOfAgents; firstCounter++){
+            agentPurchase(m.getAgents().get(firstCounter), m);
+        }
+        for (int secondCounter = 0; secondCounter < pick; secondCounter++){
+            agentPurchase(m.getAgents().get(secondCounter), m);
         }
     }
 

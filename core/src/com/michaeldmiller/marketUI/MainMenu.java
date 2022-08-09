@@ -21,7 +21,7 @@ public class MainMenu implements Screen {
         this.marketUI = marketUI;
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
-        Skin firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
+        Skin firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         Button startButton = new TextButton("Start", firstSkin);
         startButton.setPosition((int) ((marketUI.worldWidth/2) - (marketUI.standardButtonWidth/2)),
                 (int) ((marketUI.worldHeight/2) - (marketUI.standardButtonHeight/2)));

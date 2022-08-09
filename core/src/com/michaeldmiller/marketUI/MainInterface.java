@@ -48,7 +48,7 @@ public class MainInterface implements Screen {
     public MainInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
                           ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
-        firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
+        firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
         // secondFraction = 1;

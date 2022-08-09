@@ -26,7 +26,7 @@ public class MarketCreationScreen implements Screen {
         // initialize the marketUI property, stage, and button skin
         this.marketUI = marketUI;
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
-        firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
+        firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         currentMarketProfile = new ArrayList<MarketInfo>();
 
         // create the main UI table

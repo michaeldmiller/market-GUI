@@ -22,7 +22,7 @@ public class CreditsScreen implements Screen {
         this.marketUI = marketUI;
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
-        Skin firstSkin = new Skin(Gdx.files.internal("skin/clean-crispy-ui.json"));
+        Skin firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         Button menuButton = new TextButton("Menu", firstSkin);
         menuButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
                 marketUI.worldHeight - marketUI.standardButtonHeight);
