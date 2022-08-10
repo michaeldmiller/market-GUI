@@ -2,8 +2,12 @@ package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -21,6 +25,8 @@ public class MarketCreationScreen implements Screen {
     Skin firstSkin;
     Label infoLabel;
     ArrayList<MarketInfo> currentMarketProfile;
+    Drawable infoIcon;
+    Drawable infoIconClicked;
 
     public MarketCreationScreen(final MarketUI marketUI) {
         // initialize the marketUI property, stage, and button skin
@@ -28,6 +34,12 @@ public class MarketCreationScreen implements Screen {
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
         firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         currentMarketProfile = new ArrayList<MarketInfo>();
+
+        // info button texture and drawable
+        Texture infoIconTexture = new Texture(Gdx.files.internal("info-button-icon-26.png"));
+        infoIcon = new TextureRegionDrawable(new TextureRegion(infoIconTexture));
+        Texture infoIconClickedTexture = new Texture(Gdx.files.internal("info-button-icon-clicked-26.png"));
+        infoIconClicked = new TextureRegionDrawable(new TextureRegion(infoIconClickedTexture));
 
         // create the main UI table
         masterTable = new Table();
@@ -43,7 +55,7 @@ public class MarketCreationScreen implements Screen {
         Label title = new Label("Market Creator", firstSkin);
 
         // information label, wrap is true for multiple information lines
-        infoLabel = new Label(" -------------Information-------------", firstSkin);
+        infoLabel = new Label("------------Information------------", firstSkin);
         infoLabel.setWrap(true);
 
         // create menu button
@@ -310,7 +322,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        masterTable.add(createButton);
+        masterTable.add(createButton).size(150, 50);
     }
     public Table createInstructions(){
         // create output table
@@ -322,7 +334,7 @@ public class MarketCreationScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Instructions:\n" + "Welcome to the MarketUI. MarketUI dynamically simulates " +
+                infoLabel.setText("Instructions:\n" + "Welcome to the MarketUI! MarketUI dynamically simulates " +
                         "a virtual marketplace with autonomous agents, which produce and consume goods and then buy " +
                         "and sell them to one another according to basic real world motivations of needs and a " +
                         "desire for profit. Governed by the real laws of microeconomics through supply and demand " +
@@ -335,7 +347,7 @@ public class MarketCreationScreen implements Screen {
                         "about that good. Click on the information boxes associated with each to learn more about "+
                         "them. When you are done, click the create button in the bottom right to create the market " +
                         "and begin simulating it. Alternatively, click on a preset to use a prebuilt market and begin " +
-                        "simulating right away. Thank you for using MarketUI.\n");
+                        "simulating right away. Thank you for using MarketUI!");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -357,10 +369,10 @@ public class MarketCreationScreen implements Screen {
         bottomRow.addActor(bottomRowInteractive);
 
         // create field for number of Agents, prefilled to 2000
-        Label numberOfAgents = new Label ("# of Agents", firstSkin);
-        bottomRowLabels.add(numberOfAgents).padLeft(20);
+        Label numberOfAgents = new Label ("Number of Agents", firstSkin);
+        bottomRowLabels.add(numberOfAgents).padLeft(35).padRight(5);
         // info button
-        TextButton numberOfAgentsButton = new TextButton("I", firstSkin);
+        ImageButton numberOfAgentsButton = new ImageButton(infoIcon, infoIconClicked);
         numberOfAgentsButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
@@ -377,7 +389,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        bottomRowLabels.add(numberOfAgentsButton).padRight(50);
+        bottomRowLabels.add(numberOfAgentsButton).padRight(35);
 
         TextField numberOfAgentsField = new TextField("2000", firstSkin);
         bottomRowInteractive.add(numberOfAgentsField).padRight(50);
@@ -386,7 +398,7 @@ public class MarketCreationScreen implements Screen {
         Label preset1Label = new Label("Preset 1", firstSkin);
         bottomRowLabels.add(preset1Label).padLeft(20).padRight(5);
         // info button
-        TextButton preset1InfoButton = new TextButton("I", firstSkin);
+        ImageButton preset1InfoButton = new ImageButton(infoIcon, infoIconClicked);
         preset1InfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
@@ -408,7 +420,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        bottomRowLabels.add(preset1InfoButton);
+        bottomRowLabels.add(preset1InfoButton).padRight(30);
 
         Button preset1CreateButton = new TextButton("Use Preset", firstSkin);
         preset1CreateButton.addListener(new InputListener(){
@@ -488,9 +500,6 @@ public class MarketCreationScreen implements Screen {
 
 
 
-
-
-
         return bottomRow;
     }
 
@@ -500,10 +509,10 @@ public class MarketCreationScreen implements Screen {
 
         // good name label
         Label name = new Label ("Good Name", firstSkin);
-        labels.add(name).padLeft(20);
+        labels.add(name).padLeft(35).padRight(5);
         // info button
-        TextButton nameButton = new TextButton("I", firstSkin);
-        nameButton.addListener(new InputListener(){
+        ImageButton nameInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        nameInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -514,15 +523,15 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(nameButton).padRight(20);
+        labels.add(nameInfoButton).padRight(30);
 
 
         // good consumption label
         Label consumption = new Label ("Base Consumption", firstSkin);
-        labels.add(consumption);
+        labels.add(consumption).padRight(5);
         // info button
-        TextButton consumptionButton = new TextButton("I", firstSkin);
-        consumptionButton.addListener(new InputListener(){
+        ImageButton consumptionInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        consumptionInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -540,14 +549,14 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(consumptionButton).padRight(10);
+        labels.add(consumptionInfoButton).padRight(20);
 
         // good production label
         Label production = new Label ("Base Production", firstSkin);
-        labels.add(production);
+        labels.add(production).padRight(5);
         // info button
-        TextButton productionButton = new TextButton("I", firstSkin);
-        productionButton.addListener(new InputListener(){
+        ImageButton productionInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        productionInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -565,14 +574,14 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(productionButton).padRight(40);
+        labels.add(productionInfoButton).padRight(65);
 
         // price elasticity label
         Label priceElasticity = new Label ("Price Elasticities", firstSkin);
-        labels.add(priceElasticity);
+        labels.add(priceElasticity).padRight(5);
         // info button
-        TextButton priceElasticityButton = new TextButton("I", firstSkin);
-        priceElasticityButton.addListener(new InputListener(){
+        ImageButton priceElasticityInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        priceElasticityInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -600,14 +609,14 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(priceElasticityButton).padRight(65);
+        labels.add(priceElasticityInfoButton).padRight(100);
 
         // good base cost label
         Label baseValues = new Label ("Base Values", firstSkin);
-        labels.add(baseValues);
+        labels.add(baseValues).padRight(5);
         // info button
-        TextButton baseValuesButton = new TextButton("I", firstSkin);
-        baseValuesButton.addListener(new InputListener(){
+        ImageButton baseValuesInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        baseValuesInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -629,14 +638,14 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(baseValuesButton).padRight(70);
+        labels.add(baseValuesInfoButton).padRight(75);
 
         // good job name label
         Label jobName = new Label ("Job Name", firstSkin);
-        labels.add(jobName);
+        labels.add(jobName).padRight(5);
         // info button
-        TextButton jobNameButton = new TextButton("I", firstSkin);
-        jobNameButton.addListener(new InputListener(){
+        ImageButton jobNameInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        jobNameInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -649,14 +658,14 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(jobNameButton).padRight(55);
+        labels.add(jobNameInfoButton).padRight(75);
 
         // job chance label
         Label chance = new Label ("Job Chance", firstSkin);
-        labels.add(chance);
+        labels.add(chance).padRight(5);
         // info button
-        TextButton chanceButton = new TextButton("I", firstSkin);
-        chanceButton.addListener(new InputListener(){
+        ImageButton chanceInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        chanceInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
@@ -673,7 +682,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(chanceButton).padRight(120);
+        labels.add(chanceInfoButton).padRight(120);
 
 
         return labels;
@@ -696,9 +705,12 @@ public class MarketCreationScreen implements Screen {
         good.add(baseProduction).padRight(10);
 
         // get price elasticity of demand
-        final Label elasticityDemandLabel = new Label("-5", firstSkin);
+        final Label elasticityDemandLabel = new Label("-5.00", firstSkin);
         // set fixed size so value change does not slightly resize the label
-        good.add(elasticityDemandLabel).size(33);
+        // condensed layout:
+        // good.add(elasticityDemandLabel).size(45, 20);
+        // spacious layout:
+        good.add(elasticityDemandLabel).size(45, 40);
 
         final Slider elasticityDemand = new Slider(-5f, -0.01f, 0.1f, false, firstSkin);
         good.add(elasticityDemand).padRight(10);
@@ -734,12 +746,16 @@ public class MarketCreationScreen implements Screen {
 
         // get job name
         TextField jobName = new TextField("Job Name", firstSkin);
-        good.add(jobName).padRight(25);
+        good.add(jobName).padRight(10);
 
         // get job chance (between 0 and 1)
-        final Label jobChanceLabel = new Label("0", firstSkin);
+        final Label jobChanceLabel = new Label("0.00", firstSkin);
         // set fixed size so value change does not slightly resize the label
-        good.add(jobChanceLabel).size(25);
+        // condensed layout:
+        // good.add(jobChanceLabel).size(40, 20);
+        // spacious layout:
+        good.add(jobChanceLabel).size(40);
+
 
         final Slider jobChance = new Slider(0f, 1f, 0.05f, false, firstSkin);
         good.add(jobChance).padRight(10);
