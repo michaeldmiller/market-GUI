@@ -3,17 +3,21 @@ package com.michaeldmiller.marketUI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
 import com.badlogic.gdx.utils.Align;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ScrollingGraph {
+public class ScrollingGraph extends Actor {
     private int x;
     private int y;
     private int width;
@@ -52,16 +56,16 @@ public class ScrollingGraph {
         this.graphTitle = new Label("", skin);
     }
     // accessors
-    public int getX(){
+    public float getX(){
         return x;
     }
-    public int getY(){
+    public float getY(){
         return y;
     }
-    public int getWidth(){
+    public float getWidth(){
         return width;
     }
-    public int getHeight(){
+    public float getHeight(){
         return height;
     }
     public int getWorldWidth(){
@@ -282,7 +286,8 @@ public class ScrollingGraph {
     }
 
     // remove functions
-    public void removeGraphDots(int xThreshold, ArrayList<GraphPoint> dots){
+    public void removeGraphDots(float xThresholdFloat, ArrayList<GraphPoint> dots){
+        int xThreshold = (int) Math.ceil(xThresholdFloat);
         // given the list of graph points
         for (int i = 0; i < dots.size(); i++){
             // if the x coordinate of the dot is at or has surpassed the threshold plus one (moving right to left)
@@ -294,8 +299,9 @@ public class ScrollingGraph {
         }
     }
 
-    public void removeGraphLabels(int xThreshold, ArrayList<Label> labels){
-        // essentially identical to removeGraphDots but for Labels, may be redundant
+    public void removeGraphLabels(float xThresholdFloat, ArrayList<Label> labels){
+        // essentially identical to removeGraphDots but for labels
+        int xThreshold = (int) Math.ceil(xThresholdFloat);
         for (int i = 0; i < labels.size(); i++){
             if (labels.get(i).getX() <= xThreshold + 3){
                 labels.get(i).remove();

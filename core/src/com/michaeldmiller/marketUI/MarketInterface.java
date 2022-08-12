@@ -2,9 +2,13 @@ package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
@@ -12,34 +16,80 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.michaeldmiller.economicagents.MarketInfo;
+
+import com.michaeldmiller.economicagents.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MarketCreationScreen implements Screen {
+import static com.michaeldmiller.economicagents.MarketMain.*;
+
+public class MarketInterface implements Screen {
     final MarketUI marketUI;
-    Stage stage;
-    Table masterTable;
-    VerticalGroup marketGoods;
+    public Stage stage;
     Skin firstSkin;
-    Label infoLabel;
+    Market market;
     ArrayList<MarketInfo> currentMarketProfile;
+    HashMap<String, Color> colorLookup;
+    Label prices;
+    Label moreInfo;
+    Label errorLabel;
+    TextField goodField;
+    TextField consumptionField;
+    TextField costField;
+    TextField consumptionCostField;
+    TextField agentField;
+    double scale;
+    int frame;
+    double secondFraction;
+    int numberOfAgents;
+    ScrollingGraph priceGraph;
+    ScrollingGraph professionGraph;
+    ScrollingGraph moneyGraph;
+    ScrollingGraph unmetNeedGraph;
+    ScrollingGraph marketInventoryGraph;
+    ScrollingGraph agentPropertyGraph;
+    String agentID;
     Drawable infoIcon;
     Drawable infoIconClicked;
+    Table masterTable;
+    VerticalGroup marketGoods;
+    Label infoLabel;
 
-    public MarketCreationScreen(final MarketUI marketUI) {
-        // initialize the marketUI property, stage, and button skin
+
+    public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
+                          ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
-        stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
         firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
-        currentMarketProfile = new ArrayList<MarketInfo>();
+        frame = 0;
+        secondFraction = 0.0167;
+        // secondFraction = 1;
+        scale = 1.75;
+        // set number of agents
+        numberOfAgents = specifiedNumberOfAgents;
+        currentMarketProfile = specifiedMarketProfile;
+        // set initial agent
+        agentID = "1";
 
         // info button texture and drawable
         Texture infoIconTexture = new Texture(Gdx.files.internal("info-button-icon-26.png"));
         infoIcon = new TextureRegionDrawable(new TextureRegion(infoIconTexture));
         Texture infoIconClickedTexture = new Texture(Gdx.files.internal("info-button-icon-clicked-26.png"));
         infoIconClicked = new TextureRegionDrawable(new TextureRegion(infoIconClickedTexture));
+
+        // TODO: Add dynamic color lookup
+        // setup color lookup table
+        colorLookup = new HashMap<String, Color>();
+        colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
+        colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
+        colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
+        colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+        colorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
+        // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
+        colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
+
+        stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
         // create the main UI table
         masterTable = new Table();
@@ -49,7 +99,7 @@ public class MarketCreationScreen implements Screen {
         masterTable.top().left();
         masterTable.padTop(10);
         // enable debugging for design purposes
-        // masterTable.setDebug(true);
+        masterTable.setDebug(true);
 
         // create labels
         Label title = new Label("Market Creator", firstSkin);
@@ -83,31 +133,109 @@ public class MarketCreationScreen implements Screen {
         masterTable.add(menuButton).top().right().width(100);
         masterTable.row();
 
-        // create vertical group, for adding and removing good properties
+        // create vertical group, with one or two rows, each containing a horizontal group, for the graphs
         marketGoods = new VerticalGroup();
         marketGoods.align(Align.left);
 
-        // create good button
-        Button createGoodButton = new TextButton("Add Good", firstSkin);
-        createGoodButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // create a new good table, add it to the marketGoods group
-                marketGoods.addActor(createGood());
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        marketGoods.addActor(createGoodButton);
+        HorizontalGroup graphRow1 = new HorizontalGroup();
+
+
+
+        // Texture testTexture = new Texture(Gdx.files.internal("test.png"));
+        // Drawable testDraw = new TextureRegionDrawable(new TextureRegion(testTexture));
+
+        // Image x = new Image(testDraw);
+        // x.setHeight(4000);
+        // x.setSize(1000, 400);
+        // graphRow1.addActor(x);
+
+        marketGoods.setSize(2000, 400);
+
+        marketGoods.addActor(graphRow1);
+        marketGoods.expand();
+
         // create labels
-        marketGoods.addActor(createCategoryLabels());
+        // marketGoods.addActor(createCategoryLabels());
 
         // create scroll pane for goods
-        ScrollPane goodsScrollPane = new ScrollPane(marketGoods);
         // set to fill whole rest of the screen (might be changed later), align to the top
-        masterTable.add(goodsScrollPane).expandY().top();
+        // masterTable.add(marketGoods).expandY().top();
+
+        // create invisible table to provide size suggestions to the graphs, which are positioned outside
+        // the master table directly on the stage.
+
+        Table graphDisplayTable = new Table();
+        // four primary slots of size 580 x 340. Padded on the top, left, right, and bottom, with internal pads
+        // as well. i.e. five rows and five columns
+        // first row (all top padding), 25 height
+        graphDisplayTable.add().prefHeight(25);
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.row();
+        // second row (first primary row)
+        graphDisplayTable.add();
+        graphDisplayTable.add().prefSize(600, 400);
+        graphDisplayTable.add();
+        graphDisplayTable.add().prefSize(650, 400);
+        graphDisplayTable.add();
+        graphDisplayTable.row();
+        // third row (middle padding), 25 height
+        graphDisplayTable.add().prefSize(45);
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.row();
+        // fourth row (second primary row)
+        graphDisplayTable.add();
+        graphDisplayTable.add().prefSize(600, 400);
+        graphDisplayTable.add();
+        graphDisplayTable.add().prefSize(600, 400);
+        graphDisplayTable.add();
+        graphDisplayTable.row();
+        // fifth row (bottom padding), 25 height
+        graphDisplayTable.add().prefHeight(25);
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.add();
+        graphDisplayTable.row();
+
+        masterTable.add(graphDisplayTable).expand();
+        // there now exists an array of 25 cells associated with the graph display table. There are four display
+        // cells, indexed 6, 8, 16, and 18.
+
+        // add price graph
+        // System.out.println(graphDisplayTable.getChild(6).getX());
+        // System.out.println(graphDisplayTable.getChildren());
+        // System.out.println(graphDisplayTable.getChild(0).getHeight());
+        // System.out.println(graphDisplayTable.getCells());
+        // System.out.println(graphDisplayTable.getCells().size);
+        // System.out.println(graphDisplayTable.getCells().get(1).getPrefHeight());
+        // System.out.println(graphDisplayTable.getX());
+        // System.out.println(graphDisplayTable.getY());
+        // System.out.println(masterTable.getX());
+
+        // using tables is inefficient for the task, as there does not seem to be an easy way to access the
+        // absolute x and y coordinates, relative to the screen, of any given cell.
+        // Proposed solution: through trial and error, with the aid of the table measurements gathered from earlier,
+        // determine the absolute coordinates of the four graph locations for the screen size. This will mean that
+        // this program is fixed to a display size of 1600 x 900, although converting them back into world size ratios,
+        // as done previously, may be possible.
+
+        // Essentially, the table layout and the graphs will be wholly separate. The table layout will leave a big
+        // empty space where the app will separately draw the graphs at predetermined locations with fixed sizes.
+        // Given that there is meant to be a radio button, 1 through 4, which creates drop down menus containing
+        // the available graph types, the selection of which creates a graph of that type in the corresponding slots,
+        // this absolute interpretation should work fine for the use case.
+
+        priceGraph = new ScrollingGraph(80,  100, 600, 340, marketUI.worldWidth,
+                marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+
+        priceGraph.makeGraph();
 
         // info box, add information label
         // create scroll pane
@@ -121,208 +249,499 @@ public class MarketCreationScreen implements Screen {
         // center align
         masterTable.add(createBottomRow()).top();
 
-        // add create button
-        Button createButton = new TextButton("Create", firstSkin);
-        createButton.addListener(new InputListener(){
+        instantiateMarket();
+
+        Array<Cell> cells = masterTable.getCells();
+        for (Cell c : cells){
+            Vector2 x = menuButton.localToParentCoordinates(new Vector2(masterTable.getX(), masterTable.getY()));
+            // System.out.println(x);
+            // System.out.println(c);
+            // System.out.println(c.getActorX());
+        }
+
+        /*
+
+        // add buttons
+        addButtons();
+
+        // instantiate market
+
+
+        // make adjustment fields
+        makeAdjustmentFields();
+
+        // add price graph
+        priceGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        // add profession graph
+        professionGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        // add money graph
+        moneyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.000005, "Money", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        // unmet needs graph
+        unmetNeedGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        // market inventory graph
+        marketInventoryGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.005, "Inventory", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        // agent property graph
+        agentPropertyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
+                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
+                marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+
+
+        priceGraph.makeGraph();
+        professionGraph.makeGraph();
+        // moneyGraph.makeGraph();
+        unmetNeedGraph.makeGraph();
+        //marketInventoryGraph.makeGraph();
+        agentPropertyGraph.makeGraph();
+
+         */
+    }
+
+    @Override
+    public void show() {
+
+    }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
+        Gdx.input.setInputProcessor(stage);
+        frame += 1;
+        // use second fraction to determine how often to call run market
+        if (frame % ((int) (secondFraction * 60)) == 0) {
+            try {
+                runMarket(market, frame);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            updatePriceGraph();
+            //updateProfessionGraph();
+            // updateMoneyGraph();
+            //updateUnmetNeedGraph();
+            // updateMarketInventoryGraph();
+            //updateAgentPropertyGraph(agentID);
+            //prices.setText(market.getPrices().toString());
+            /*
+            for (Agent a : market.getAgents()) {
+                if (a.getId().equals(agentID)){
+                    moreInfo.setText(a.toString());
+                    // System.out.println(a.getConsumption().toString());
+                }
+            }
+
+             */
+
+        }
+        priceGraph.graphLabels();
+        /*
+
+        professionGraph.graphLabels();
+        // moneyGraph.graphLabels();
+        unmetNeedGraph.graphLabels();
+        // marketInventoryGraph.graphLabels();
+        agentPropertyGraph.graphLabels();
+
+         */
+
+        stage.act(delta);
+        stage.draw();
+
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void hide() {
+
+    }
+
+    @Override
+    public void dispose() {
+
+    }
+
+    // UI Instantiation
+    public void addButtons(){
+        Button menuButton = new TextButton("Menu", firstSkin);
+        menuButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - marketUI.standardButtonHeight);
+        menuButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        menuButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // loop through market good table
-                int i = 0;
-                StringBuilder errorText = new StringBuilder();
-                errorText.append("Error(s):\n");
-                ArrayList<MarketInfo> marketInfoAccumulation = new ArrayList<>();
-                for (Actor actor : marketGoods.getChildren()){
-                    // ignore the first two
-                    if (!(i <= 1)){
-                        // cast to table, as it is known everything after the first two is a data table for a good
-                        Table t = (Table) actor;
-                        // create error text, which will display the location of any errors
-
-                        int currentGoodNum = i - 1;
-
-                        // get the children, i.e. the fields about the good information
-
-                        // store text from the good field as the good's name
-                        TextField goodField = (TextField) t.getChild(0);
-                        String goodName = goodField.getText();
-
-                        // get the base consumption, reject if it is not a number or less than zero.
-                        TextField consumptionField = (TextField) t.getChild(1);
-                        double baseConsumption = 0;
-                        try{
-                            baseConsumption = Double.parseDouble(consumptionField.getText());
-                            if (baseConsumption < 0){
-                                throw new IllegalArgumentException();
-                            }
-                        } catch(NumberFormatException e){
-                            errorText.append(String.format("The base consumption of good %d (%s) must be a number.\n",
-                                    currentGoodNum, goodName));
-                        } catch(IllegalArgumentException e){
-                            errorText.append(String.format("The base consumption of good %d (%s) must be positive.\n",
-                                    currentGoodNum, goodName));
-                        }
-
-                        // get the base production, reject if it is not a number or less than zero.
-                        TextField productionField = (TextField) t.getChild(2);
-                        double baseProduction = 0;
-                        try{
-                            baseProduction = Double.parseDouble(productionField.getText());
-                            if (baseProduction < 0) {
-                                throw new IllegalArgumentException();
-                            }
-                        } catch(NumberFormatException e){
-                            errorText.append(String.format("The base production of good %d (%s) must be a number.\n",
-                                    currentGoodNum, goodName));
-                        } catch(IllegalArgumentException e){
-                            errorText.append(String.format("The base production of good %d (%s) must be positive.\n",
-                                    currentGoodNum, goodName));
-                        }
-
-
-                        // get the elasticities, no checks required here as the slider and selector limit
-                        // the possible user inputs
-                        // index 3 is the label for the slider, skip to 4
-                        Slider demandElasticitySlider = (Slider) t.getChild(4);
-                        double demandElasticity = demandElasticitySlider.getValue();
-
-
-                        // despite complaints, the value at index 5 is in fact a select box of integers
-                        @SuppressWarnings("unchecked") SelectBox<Integer> supplyElasticityBox =
-                                (SelectBox<Integer>) t.getChild(5);
-                        double supplyElasticity = supplyElasticityBox.getSelected();
-
-                        // get the base cost, reject if it is not a number or less than zero.
-                        TextField baseCostField = (TextField) t.getChild(6);
-                        double baseCost = 0;
-                        try{
-                            baseCost = Double.parseDouble(baseCostField.getText());
-                            if (baseConsumption < 0){
-                                throw new IllegalArgumentException();
-                            }
-                        } catch(NumberFormatException e){
-                            errorText.append(String.format("The base cost of good %d (%s) must be a number.\n",
-                                    currentGoodNum, goodName));
-                        } catch(IllegalArgumentException e){
-                            errorText.append(String.format("The base cost of good %d (%s) must be positive.\n",
-                                    currentGoodNum, goodName));
-                        }
-
-
-                        // get the base weight, no check required due to the select box limit on the possible
-                        // user inputs
-                        // despite complaints, the value at index 7 is in fact a select box of integers
-                        @SuppressWarnings("unchecked") SelectBox<Integer> baseWeightBox =
-                                (SelectBox<Integer>) t.getChild(7);
-                        double baseWeight = supplyElasticityBox.getSelected();
-
-                        // get the job name
-                        TextField jobNameField = (TextField) t.getChild(8);
-                        String jobName = jobNameField.getText();
-
-                        // get the job chance, slider ensures all values are valid
-                        // skip index 9, as it is occupied by the label for the job chance
-                        Slider jobChanceSlider = (Slider) t.getChild(10);
-                        double jobChance = jobChanceSlider.getValue();
-
-                        // with reasonable values, create a market info object for the good
-                        MarketInfo marketInfo = new MarketInfo(goodName, baseConsumption, baseProduction,
-                                demandElasticity, supplyElasticity, baseCost, baseWeight,
-                                jobName, jobChance);
-                        marketInfoAccumulation.add(marketInfo);
-
-
-                    }
-                    // increment counter
-                    i++;
-                }
-                // prevent repeats by checking for duplicates
-                // create list of good and job names
-                ArrayList<String> goodNames = new ArrayList<>();
-                ArrayList<String> jobNames = new ArrayList<>();
-                for (MarketInfo currentMarketProperty : marketInfoAccumulation){
-                    goodNames.add(currentMarketProperty.getGood());
-                    jobNames.add(currentMarketProperty.getJobName());
-                }
-                // check to see if there are any goods at all, create an error message if there are none
-                if (goodNames.size() == 0){
-                    errorText.append("Please add at least one good.\n");
-                }
-                // create a hash set for names, then loop through the good names. If it cannot be added to the set,
-                // i.e. if there is a duplicate, report the failure and the current good number as an error to the
-                // error text.
-                HashSet<String> goodNameSet = new HashSet<>();
-                int placeCountNames = 1;
-                for (String name : goodNames){
-                    boolean goodNotThere = goodNameSet.add(name);
-                    if (!goodNotThere){
-                        errorText.append(String.format("Good %d (%s) cannot be named this, as the name has already " +
-                                        "been used.\n", placeCountNames, name));
-                    }
-                    placeCountNames++;
-                }
-                // do the same operation as above for the job/profession names
-                HashSet<String> jobNameSet = new HashSet<>();
-                int placeCountJobs = 1;
-                for (String job : jobNames){
-                    boolean jobNotThere = jobNameSet.add(job);
-                    if (!jobNotThere){
-                        errorText.append(String.format("Job %d (%s) cannot be named this, as the name has already " +
-                                "been used.\n", placeCountJobs, job));
-                    }
-                    placeCountJobs++;
-                }
-
-                // check to make sure the sum of the job chances is not 0, create an error text if the sum is 0.
-                double jobChanceSum = 0;
-                for (MarketInfo currentMarketInfo : marketInfoAccumulation){
-                    jobChanceSum += currentMarketInfo.getJobChance();
-                }
-                // if there was no good added, do not print the error message
-                if (jobChanceSum == 0 && jobNames.size() != 0){
-                    errorText.append("At least one good must have a job chance greater than 0.\n");
-                }
-
-                // get the number of agents
-                VerticalGroup bottomRow = (VerticalGroup) masterTable.getChild(4);
-                Table interactiveBottomRow = (Table) bottomRow.getChild(1);
-                TextField numberOfAgentsField = (TextField) interactiveBottomRow.getChild(0);
-                int numberOfAgents = 0;
-                try{
-                    numberOfAgents = Integer.parseInt(numberOfAgentsField.getText());
-                    if (numberOfAgents < 0){
-                        throw new IllegalArgumentException();
-                    }
-                } catch(NumberFormatException e){
-                    errorText.append("The number of agents must be a number.\n");
-                } catch(IllegalArgumentException e){
-                    errorText.append("The number of agents must be positive.\n");
-                }
-
-                // finally, if there were no errors (i.e. the error text is still its initial value), create the
-                // market, otherwise, set the information box to show the encountered errors
-                if(errorText.toString().equals("Error(s):\n")){
-                    // set the market information
-                    currentMarketProfile = marketInfoAccumulation;
-                    // create a new main interface screen using the new market profile
-                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, currentMarketProfile);
-                    // if a market did not exist before, refresh the main menu to include an enabled resume button
-                    if (!marketUI.marketExists){
-                        marketUI.marketExists = true;
-                        marketUI.mainMenu = new MainMenu(marketUI);
-                    }
-                    // set the current screen to the main interface
-                    marketUI.setScreen(marketUI.marketInterface);
-                } else{
-                    // otherwise, display the error text in the info box
-                    infoLabel.setText(errorText.toString());
-                }
+                marketUI.setScreen(marketUI.mainMenu);
+                dispose();
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
                 return true;
             }
         });
-        masterTable.add(createButton).size(150, 50);
+        stage.addActor(menuButton);
+
+        Button printButton = new TextButton("Print", firstSkin);
+        printButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 2* marketUI.standardButtonHeight);
+        printButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        printButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // System.out.println(priceGraph.getDots().size());
+                // for (Agent a : market.getAgents()){
+                //     System.out.println(a.getConsumption());
+                // }
+                System.out.println(market.getMarketProfile());
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(printButton);
+
+    }
+
+    public void makeAdjustmentFields(){
+        goodField = new TextField("Good", firstSkin);
+        goodField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (2.5 * marketUI.standardButtonHeight));
+        stage.addActor(goodField);
+        costField = new TextField("New Cost", firstSkin);
+        costField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 3 * marketUI.standardButtonHeight);
+        stage.addActor(costField);
+
+        Button changeCostButton = new TextButton("Update Cost", firstSkin);
+        changeCostButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 4* marketUI.standardButtonHeight);
+        changeCostButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        changeCostButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                changePrice();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(changeCostButton);
+
+        // change agent (requires agent property graph)
+        agentField = new TextField("New Agent ID:", firstSkin);
+        agentField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (5 * marketUI.standardButtonHeight));
+        stage.addActor(agentField);
+
+        Button changeAgentButton = new TextButton("Update Agent", firstSkin);
+        changeAgentButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (6 * marketUI.standardButtonHeight));
+        changeAgentButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        changeAgentButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                changeAgent();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(changeAgentButton);
+
+        consumptionField = new TextField("Good", firstSkin);
+        consumptionField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (7.5 * marketUI.standardButtonHeight));
+        stage.addActor(consumptionField);
+        consumptionCostField = new TextField("New Consumption", firstSkin);
+        consumptionCostField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 8 * marketUI.standardButtonHeight);
+        stage.addActor(consumptionCostField);
+
+        Button changeConsumptionButton = new TextButton("Update Consumption", firstSkin);
+        changeConsumptionButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - 9* marketUI.standardButtonHeight);
+        changeConsumptionButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
+        changeConsumptionButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                changeConsumption();
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        stage.addActor(changeConsumptionButton);
+
+        errorLabel = new Label ("Errors Here", firstSkin);
+        errorLabel.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
+                marketUI.worldHeight - (int) (10 * marketUI.standardButtonHeight));
+        stage.addActor(errorLabel);
+
+    }
+    // Market instantiation
+    public void instantiateMarket(){
+        // create agents
+        ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
+        // create market
+        market = makeMarket(currentMarketProfile, marketAgents);
+
+        prices = new Label ("Prices", firstSkin);
+        prices.setPosition((int) (0.525 * marketUI.worldWidth), marketUI.worldHeight - 550);
+        stage.addActor(prices);
+
+        moreInfo = new Label ("", firstSkin);
+        moreInfo.setPosition((int) (0.025 * marketUI.worldWidth), marketUI.worldHeight - 100);
+        stage.addActor(moreInfo);
+
+    }
+
+    // modifier functions
+    public void changePrice(){
+        // given information in good and cost text fields, attempt to change the corresponding cost in the market
+        boolean costOK = false;
+        int costValue = 0;
+        String good = goodField.getText();
+        String cost = costField.getText();
+
+        // make sure the user entered value is an integer
+        try{
+            costValue = Integer.parseInt(cost);
+            costOK = true;
+        } catch (NumberFormatException e){
+            errorLabel.setText("Not a valid cost!");
+        }
+        // if value is ok, check goods for match and assign cost
+        if (costOK){
+            for (Price p : market.getPrices()){
+                if (p.getGood().equals(good)){
+                    p.setOriginalCost(costValue);
+                }
+            }
+        }
+    }
+
+    public void changeConsumption(){
+        // given information in good and cost text fields, attempt to change the corresponding cost in the market
+        boolean costOK = false;
+        double consumptionValue = 0;
+        String good = consumptionField.getText();
+        String cost = consumptionCostField.getText();
+
+        // make sure the user entered value is an integer
+        try{
+            consumptionValue = Double.parseDouble(cost);
+            costOK = true;
+        } catch (NumberFormatException e){
+            errorLabel.setText("Not a valid consumption!");
+        }
+        // if value is ok, set the matching consumption of each agent to the new consumption value
+        if (costOK){
+            for (Agent a : market.getAgents()){
+                a.getConsumption().get(good).setTickConsumption(consumptionValue);
+            }
+        }
+    }
+
+    public void changeAgent(){
+        // given information in good and cost text fields, attempt to change the corresponding cost in the market
+        String proposedAgentID = agentField.getText();
+
+        // if value is ok, check goods for match and assign cost
+        for (Agent a : market.getAgents()){
+            if (a.getId().equals(proposedAgentID)){
+                agentID = proposedAgentID;
+                agentPropertyGraph.setTitle(proposedAgentID);
+                agentPropertyGraph.updateGraphTitle();
+            }
+        }
+    }
+
+
+    // graph update functions
+    public void updatePriceGraph(){
+        // update function for the price graph, gets price data from market and then turns it into coordinates
+        priceGraph.setFrame(frame);
+        HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
+        for (Price p : market.getPrices()){
+            priceCoordinates.put(p.getGood(), (int) (p.getCost() * (priceGraph.getScale())));
+        }
+        priceGraph.setDataCoordinates(priceCoordinates);
+        priceGraph.graphData();
+        priceGraph.removeGraphDots(priceGraph.getX(), priceGraph.getDots());
+        priceGraph.removeGraphLabels(priceGraph.getX(), priceGraph.getLabels());
+    }
+
+    public void updateProfessionGraph(){
+        // update function for the profession graph, gets job data from market and then turns it into coordinates
+        professionGraph.setFrame(frame);
+
+        HashMap<String, Integer> jobsTotal = new HashMap<String, Integer>();
+        // get total amount in each job by looping through all agents
+        for (Agent a : market.getAgents()){
+            if (!jobsTotal.containsKey(a.getProfession().getJob())){
+                jobsTotal.put(a.getProfession().getJob(), 1);
+            }
+            else {
+                String key = a.getProfession().getJob();
+                jobsTotal.put(key, jobsTotal.get(key) + 1);
+            }
+        }
+        // convert profession names to good names to match with color lookup
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Integer> professionTotal : jobsTotal.entrySet()){
+            for (JobOutput j : market.getJobOutputs()){
+                if (j.getJob().equals(professionTotal.getKey())){
+                    professionCoordinates.put(j.getGood(), (int) (professionTotal.getValue() *
+                            (professionGraph.getScale())));
+                }
+            }
+        }
+        professionGraph.setDataCoordinates(professionCoordinates);
+        professionGraph.graphData();
+        professionGraph.removeGraphDots(professionGraph.getX(), professionGraph.getDots());
+        professionGraph.removeGraphLabels(professionGraph.getX(), professionGraph.getLabels());
+    }
+    public void updateMoneyGraph(){
+        // update function for the money graph, gets agent money data from market and then turns it into coordinates
+        moneyGraph.setFrame(frame);
+
+        int moneyTotal = 0;
+        // get total funds of all agents
+        for (Agent a : market.getAgents()) {
+            moneyTotal += a.getMoney();
+        }
+
+        // convert profession names to good names to match with color lookup
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+
+        // generate non-zero coordinate:
+        int moneyCoordinate = 0;
+        if (((int) (moneyTotal * (moneyGraph.getScale()))) == 0){
+            moneyCoordinate = 1;
+        }
+        else {
+            moneyCoordinate = (int) (moneyTotal * (moneyGraph.getScale()));
+        }
+        // System.out.println(moneyCoordinate);
+        professionCoordinates.put("MarketProperty", moneyCoordinate);
+
+        moneyGraph.setDataCoordinates(professionCoordinates);
+        moneyGraph.graphData();
+        moneyGraph.removeGraphDots(moneyGraph.getX(), moneyGraph.getDots());
+        moneyGraph.removeGraphLabels(moneyGraph.getX(), moneyGraph.getLabels());
+    }
+
+    public void updateUnmetNeedGraph(){
+        // update function for the unmet need graph, gets unmet need data from each agent and then turns it into coordinates
+        unmetNeedGraph.setFrame(frame);
+
+        HashMap<String, Double> unmetNeedTotal = new HashMap<String, Double>();
+        // update 0.2.7: reflecting removal of performance intensive individual unmet needs, just grab the new agent total
+        for (Agent a : market.getAgents()){
+            for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
+                if (!unmetNeedTotal.containsKey(consumptionEntry.getKey())){
+                    unmetNeedTotal.put(consumptionEntry.getKey(), consumptionEntry.getValue().getTotalUnmetNeed());
+                }
+                else {
+                    String key = consumptionEntry.getKey();
+                    unmetNeedTotal.put(key, unmetNeedTotal.get(key) + consumptionEntry.getValue().getTotalUnmetNeed());
+                }
+            }
+        }
+        // set doubles to integers
+        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Double> unmetEntryTotal : unmetNeedTotal.entrySet()){
+            int coordinateValue = (int) (unmetEntryTotal.getValue() * (unmetNeedGraph.getScale()));
+            professionCoordinates.put(unmetEntryTotal.getKey(), coordinateValue);
+        }
+
+        unmetNeedGraph.setDataCoordinates(professionCoordinates);
+        unmetNeedGraph.graphData();
+        unmetNeedGraph.removeGraphDots(unmetNeedGraph.getX(), unmetNeedGraph.getDots());
+        unmetNeedGraph.removeGraphLabels(unmetNeedGraph.getX(), unmetNeedGraph.getLabels());
+    }
+    public void updateMarketInventoryGraph(){
+        // update function for the price graph, gets price data from market and then turns it into coordinates
+        marketInventoryGraph.setFrame(frame);
+        HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
+        for (Map.Entry<String, Double> good : market.getInventory().entrySet()){
+            priceCoordinates.put(good.getKey(), (int) (good.getValue() * (marketInventoryGraph.getScale())));
+        }
+        marketInventoryGraph.setDataCoordinates(priceCoordinates);
+        marketInventoryGraph.graphData();
+        marketInventoryGraph.removeGraphDots(marketInventoryGraph.getX(), marketInventoryGraph.getDots());
+        marketInventoryGraph.removeGraphLabels(marketInventoryGraph.getX(), marketInventoryGraph.getLabels());
+    }
+
+    public void updateAgentPropertyGraph(String agentID){
+        // given the Agent ID, get properties about it for display
+        // start with available money and profession
+        // to start: get the agent
+        agentPropertyGraph.setFrame(frame);
+        MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
+                10, 1, "Fisherman", 1);
+        ArrayList<MarketInfo> currentMarketProfile = new ArrayList<>();
+        currentMarketProfile.add(fish);
+        Agent chosenAgent = makeAgents(currentMarketProfile, 1).get(0);
+        for (Agent a : market.getAgents()){
+            if (a.getId().equals(agentID)){
+                chosenAgent = a;
+            }
+        }
+        // get properties of the chosen agent
+        HashMap<String, Integer> agentDataCoordinates = new HashMap<>();
+
+        // get money coordinate
+        int moneyCoordinate = (int) (chosenAgent.getMoney() * (agentPropertyGraph.getScale()));
+        agentDataCoordinates.put("MarketProperty", moneyCoordinate);
+
+        // get profession information
+        int professionCoordinate = (int) (agentPropertyGraph.getHeight() / 2);
+        String profession = chosenAgent.getProfession().getJob();
+        String professionGood = "MarketProperty";
+        for (JobOutput j : market.getJobOutputs()){
+            if (j.getJob().equals(profession)){
+                professionGood = j.getGood();
+            }
+        }
+        agentDataCoordinates.put(professionGood, professionCoordinate);
+        // System.out.println(agentDataCoordinates);
+
+        agentPropertyGraph.setDataCoordinates(agentDataCoordinates);
+        agentPropertyGraph.graphData();
+        agentPropertyGraph.removeGraphDots(agentPropertyGraph.getX(), agentPropertyGraph.getDots());
+        agentPropertyGraph.removeGraphLabels(agentPropertyGraph.getX(), agentPropertyGraph.getLabels());
     }
     public Table createInstructions(){
         // create output table
@@ -792,43 +1211,5 @@ public class MarketCreationScreen implements Screen {
 
     }
 
-    @Override
-    public void show() {
-
-    }
-
-    @Override
-    public void render(float delta) {
-        ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
-        Gdx.input.setInputProcessor(stage);
-        stage.act(delta);
-        stage.draw();
-
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-    }
-
-    @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-
-    }
-
-    @Override
-    public void dispose() {
-
-    }
-
 }
+

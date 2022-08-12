@@ -47,7 +47,7 @@ public class MainMenu implements Screen {
             temporaryCreatorButton.addListener(new InputListener(){
                 @Override
                 public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                    marketUI.setScreen(marketUI.mainInterface);
+                    marketUI.setScreen(marketUI.marketInterface);
                     dispose();
                 }
                 @Override

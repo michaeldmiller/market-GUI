@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class MarketUI extends Game {
 	SpriteBatch batch;
 	public Screen mainMenu;
-	public Screen mainInterface;
+	public Screen marketInterface;
 	public Screen creditsScreen;
 	public Screen creatorScreen;
 	public int worldWidth;
