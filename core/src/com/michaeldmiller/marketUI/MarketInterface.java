@@ -6,10 +6,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
@@ -56,6 +56,7 @@ public class MarketInterface implements Screen {
     Table masterTable;
     VerticalGroup marketGoods;
     Label infoLabel;
+    HashMap<Integer, ScrollingGraph> graphs;
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
@@ -165,58 +166,10 @@ public class MarketInterface implements Screen {
         // the master table directly on the stage.
 
         Table graphDisplayTable = new Table();
-        // four primary slots of size 580 x 340. Padded on the top, left, right, and bottom, with internal pads
-        // as well. i.e. five rows and five columns
-        // first row (all top padding), 25 height
-        graphDisplayTable.add().prefHeight(25);
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.row();
-        // second row (first primary row)
-        graphDisplayTable.add();
-        graphDisplayTable.add().prefSize(600, 400);
-        graphDisplayTable.add();
-        graphDisplayTable.add().prefSize(650, 400);
-        graphDisplayTable.add();
-        graphDisplayTable.row();
-        // third row (middle padding), 25 height
-        graphDisplayTable.add().prefSize(45);
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.row();
-        // fourth row (second primary row)
-        graphDisplayTable.add();
-        graphDisplayTable.add().prefSize(600, 400);
-        graphDisplayTable.add();
-        graphDisplayTable.add().prefSize(600, 400);
-        graphDisplayTable.add();
-        graphDisplayTable.row();
-        // fifth row (bottom padding), 25 height
-        graphDisplayTable.add().prefHeight(25);
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.add();
-        graphDisplayTable.row();
-
         masterTable.add(graphDisplayTable).expand();
-        // there now exists an array of 25 cells associated with the graph display table. There are four display
-        // cells, indexed 6, 8, 16, and 18.
-
-        // add price graph
-        // System.out.println(graphDisplayTable.getChild(6).getX());
-        // System.out.println(graphDisplayTable.getChildren());
-        // System.out.println(graphDisplayTable.getChild(0).getHeight());
-        // System.out.println(graphDisplayTable.getCells());
-        // System.out.println(graphDisplayTable.getCells().size);
-        // System.out.println(graphDisplayTable.getCells().get(1).getPrefHeight());
-        // System.out.println(graphDisplayTable.getX());
-        // System.out.println(graphDisplayTable.getY());
-        // System.out.println(masterTable.getX());
+        // the code is unnecessary, as the graphs are placed using absolute coordinates, but the graphs are placed
+        // within a virtual 5x5 table, in (2, 2), (4, 2), (2, 4), and (4, 4). Row and Column 1, 3, and 5, explicitly
+        // control the left, center, and right (top, middle, and bottom) padding of the graph cells.
 
         // using tables is inefficient for the task, as there does not seem to be an easy way to access the
         // absolute x and y coordinates, relative to the screen, of any given cell.
@@ -225,22 +178,175 @@ public class MarketInterface implements Screen {
         // this program is fixed to a display size of 1600 x 900, although converting them back into world size ratios,
         // as done previously, may be possible.
 
-        // Essentially, the table layout and the graphs will be wholly separate. The table layout will leave a big
-        // empty space where the app will separately draw the graphs at predetermined locations with fixed sizes.
-        // Given that there is meant to be a radio button, 1 through 4, which creates drop down menus containing
-        // the available graph types, the selection of which creates a graph of that type in the corresponding slots,
-        // this absolute interpretation should work fine for the use case.
 
-        priceGraph = new ScrollingGraph(80,  100, 600, 340, marketUI.worldWidth,
+        // Left, Center, and Right X padding of 70, Left, Center, and Right Padding of 45, noting the 55 height
+        // of the lower bar. Given a target width of 1350, confined by 250 wide info box, these are the resulting
+        // coordinates of each graph slot:
+        // Slot 1: 70, 480;
+        // Slot 2: 70, 100;
+        // Slot 3: 710, 480;
+        // Slot 4: 710, 100;
+
+        // inferred dimensions of each graph given the number of graphs:
+        // three or four: (570, 335)
+        // two: (1210, 335)
+        // one: (1210, 715)
+
+        // add price graph;
+        priceGraph = new ScrollingGraph(70,  480, 570, 335, marketUI.worldWidth,
                 marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
-
         priceGraph.makeGraph();
+        // graphs.put(0, priceGraph);
+        // add profession graph
+        professionGraph = new ScrollingGraph(70, 100, 570, 335, marketUI.worldWidth,
+                marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        professionGraph.makeGraph();
+        // agent property graph
+        agentPropertyGraph = new ScrollingGraph(710, 480, 570, 335, marketUI.worldWidth,
+                marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        agentPropertyGraph.makeGraph();
+        // unmet needs graph
+        unmetNeedGraph = new ScrollingGraph(710, 100, 570,335, marketUI.worldWidth,
+                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
+                colorLookup, firstSkin, frame, stage);
+        unmetNeedGraph.makeGraph();
+
+
+        // information panel: graph selectors and information label
+        VerticalGroup informationPanel = new VerticalGroup();
+        Button zero = new CheckBox("0", firstSkin);
+        Button one = new CheckBox("1", firstSkin);
+        Button two = new CheckBox("2", firstSkin);
+        Button three = new CheckBox("3", firstSkin);
+        Button four = new CheckBox("4", firstSkin);
+        final ButtonGroup<Button> numberOfGraphs = new ButtonGroup<>();
+        numberOfGraphs.add(zero, one, two, three, four);
+        // set zero to checked
+        numberOfGraphs.setChecked("0");
+        // make sure one box is checked at all times
+        numberOfGraphs.setMinCheckCount(1);
+        numberOfGraphs.setMaxCheckCount(1);
+        // create options
+        Label numberOfGraphsPrompt = new Label("Number of Graphs", firstSkin);
+        informationPanel.addActor(numberOfGraphsPrompt);
+        Table graphNumberCheckBoxes = new Table();
+        graphNumberCheckBoxes.add(zero).padRight(10);
+        graphNumberCheckBoxes.add(one).padRight(10);
+        graphNumberCheckBoxes.add(two).padRight(10);
+        graphNumberCheckBoxes.add(three).padRight(10);
+        graphNumberCheckBoxes.add(four).padRight(10);
+
+        informationPanel.addActor(graphNumberCheckBoxes);
+
+        // graph type selector horizontal group
+        HorizontalGroup graphTypeGroup = new HorizontalGroup();
+        informationPanel.addActor(graphTypeGroup);
+
+
+
+        final SelectBox<Integer> numberOfGraphsSelector = new SelectBox<>(firstSkin);
+        Array<Integer> graphChoices = new Array<>();
+        graphChoices.add(0);
+        graphChoices.add(1);
+        graphChoices.add(2);
+        graphChoices.add(3);
+        graphChoices.add(4);
+        numberOfGraphsSelector.setItems(graphChoices);
+        informationPanel.addActor(numberOfGraphsSelector);
+
+        final VerticalGroup typeSelectors = new VerticalGroup();
+        // typeSelectors.addActor(new Label("", firstSkin));
+        informationPanel.addActor(typeSelectors);
+
+        numberOfGraphsSelector.addListener(new ChangeListener(){
+            @Override
+            public void changed(ChangeEvent changeEvent, Actor actor) {
+                System.out.println(numberOfGraphsSelector.getSelected());
+                // get current amount of graphs
+                int currentNumberOfSelectors = typeSelectors.getChildren().size;
+                // determine if difference is positive or negative
+                int numberOfChange = numberOfGraphsSelector.getSelected() - currentNumberOfSelectors;
+                // if negative, remove from the end the requested number of times
+                if (numberOfChange < 0){
+                    for (int i = 0; i < (numberOfChange * -1); i++){
+                        // remove actor at the end of the list (have to adjust from size to index)
+                        Actor removed = typeSelectors.removeActorAt(currentNumberOfSelectors - 1, false);
+                        // clear the removed actor
+                        removed.clear();
+                        currentNumberOfSelectors--;
+                    }
+                } else if(numberOfChange > 0){
+                    // if positive, add the requested number to the type selector
+                    for (int i = 0; i < numberOfChange; i++){
+                        // create select box
+                        final SelectBox<String> graphTypeSelector = new SelectBox<String>(firstSkin);
+                        Array<String> graphTypes = new Array<>();
+                        graphTypes.add("Price");
+                        graphTypes.add("Producers");
+                        graphTypes.add("Agent");
+                        graphTypes.add("Unmet Needs");
+                        graphTypeSelector.setItems(graphTypes);
+
+                        // create table
+                        Table graphTypeSelectorTable = new Table();
+                        // create label for graph number
+                        int graphNumber = currentNumberOfSelectors + i + 1;
+
+                        // create initial graph (if not using starting blank choice)
+                        // createGraph(graphNumber, graphTypes.get(0));
+
+                        Label graphNumberLabel = new Label("Graph #" + graphNumber + ":", firstSkin);
+                        graphTypeSelectorTable.add(graphNumberLabel).padRight(10);
+
+
+                        graphTypeSelector.addListener(new ChangeListener(){
+                            @Override
+                            public void changed(ChangeEvent changeEvent, Actor actor) {
+                                // get current graph number
+                                int index = 0;
+                                int location = 0;
+                                // since each of these buttons is nested in a table, and we want to see the button's
+                                // index in the vertical group, need to get the button's grandparent and check
+                                // it against the grandchildren
+                                for (Actor tableActor : actor.getParent().getParent().getChildren()){
+                                    // find the actor from the list of actors in its parent
+                                    // loop through each child
+                                    Table table = (Table) tableActor;
+                                    for (Actor labelOrBox : table.getChildren()){
+                                        if (labelOrBox.equals(actor)){
+                                            location = index;
+                                        }
+                                    }
+                                    // if this box was not found yet, increment index
+                                    index++;
+                                }
+
+                                // with the location in hand, run the graph creation function
+                                System.out.println(location + " " + graphTypeSelector.getSelected());
+                                // createGraph(index,
+                                createGraph(0, "");
+
+                            }
+                        });
+                        graphTypeSelectorTable.add(graphTypeSelector);
+
+                        typeSelectors.addActor(graphTypeSelectorTable);
+                    }
+
+                }
+            }
+        });
+
+        // need to create select boxes of the appropriate amount
 
         // info box, add information label
         // create scroll pane
         final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
-        masterTable.add(informationScrollPane).width(250).center().top();
+        informationPanel.addActor(informationScrollPane);
+        masterTable.add(informationPanel).width(250).center().top();
 
         // add bottom row
         masterTable.row();
@@ -251,20 +357,11 @@ public class MarketInterface implements Screen {
 
         instantiateMarket();
 
-        Array<Cell> cells = masterTable.getCells();
-        for (Cell c : cells){
-            Vector2 x = menuButton.localToParentCoordinates(new Vector2(masterTable.getX(), masterTable.getY()));
-            // System.out.println(x);
-            // System.out.println(c);
-            // System.out.println(c.getActorX());
-        }
 
         /*
 
         // add buttons
         addButtons();
-
-        // instantiate market
 
 
         // make adjustment fields
@@ -312,6 +409,26 @@ public class MarketInterface implements Screen {
          */
     }
 
+    private void createGraph(int index, String graphType){
+        // determine if graph already exists with that index
+        /*
+        if (graphs.containsKey(index)){
+            // if it does, get it and delete it.
+            ScrollingGraph oldGraph = graphs.get(index);
+            // remove the dots (test)
+            for (GraphPoint g : oldGraph.getDots()){
+                g.remove();
+            }
+        }
+
+         */
+        System.out.println("fired");
+        priceGraph.deleteAll(priceGraph.getDots(), priceGraph.getLabels(), priceGraph.getOtherComponents());
+
+
+    }
+
+
     @Override
     public void show() {
 
@@ -330,11 +447,11 @@ public class MarketInterface implements Screen {
                 throw new RuntimeException(e);
             }
             updatePriceGraph();
-            //updateProfessionGraph();
+            updateProfessionGraph();
             // updateMoneyGraph();
-            //updateUnmetNeedGraph();
+            updateUnmetNeedGraph();
             // updateMarketInventoryGraph();
-            //updateAgentPropertyGraph(agentID);
+            updateAgentPropertyGraph(agentID);
             //prices.setText(market.getPrices().toString());
             /*
             for (Agent a : market.getAgents()) {
@@ -348,6 +465,9 @@ public class MarketInterface implements Screen {
 
         }
         priceGraph.graphLabels();
+        professionGraph.graphLabels();
+        agentPropertyGraph.graphLabels();
+        unmetNeedGraph.graphLabels();
         /*
 
         professionGraph.graphLabels();
@@ -515,10 +635,6 @@ public class MarketInterface implements Screen {
         ArrayList<Agent> marketAgents = makeAgents(currentMarketProfile, numberOfAgents);
         // create market
         market = makeMarket(currentMarketProfile, marketAgents);
-
-        prices = new Label ("Prices", firstSkin);
-        prices.setPosition((int) (0.525 * marketUI.worldWidth), marketUI.worldHeight - 550);
-        stage.addActor(prices);
 
         moreInfo = new Label ("", firstSkin);
         moreInfo.setPosition((int) (0.025 * marketUI.worldWidth), marketUI.worldHeight - 100);

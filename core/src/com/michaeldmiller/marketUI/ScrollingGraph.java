@@ -33,6 +33,7 @@ public class ScrollingGraph extends Actor {
     private Stage stage;
     private ArrayList<GraphPoint> dots;
     private ArrayList<Label> labels;
+    private ArrayList<Actor> otherComponents;
     private Label graphTitle;
 
     public ScrollingGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
@@ -52,6 +53,7 @@ public class ScrollingGraph extends Actor {
         this.frame = frame;
         this.stage = stage;
         this.dots = new ArrayList<GraphPoint>();
+        this.otherComponents = new ArrayList<Actor>();
         this.labels = new ArrayList<Label>();
         this.graphTitle = new Label("", skin);
     }
@@ -100,6 +102,9 @@ public class ScrollingGraph extends Actor {
     }
     public ArrayList<Label> getLabels() {
         return labels;
+    }
+    public ArrayList<Actor> getOtherComponents(){
+        return otherComponents;
     }
     public Label getGraphTitle() {
         return graphTitle;
@@ -150,6 +155,9 @@ public class ScrollingGraph extends Actor {
     public void setLabels(ArrayList<Label> newLabels) {
         this.labels = newLabels;
     }
+    public void setOtherComponents(ArrayList<Actor> modifiedOtherComponents){
+        this.otherComponents = modifiedOtherComponents;
+    }
     public void setGraphTitle(Label newGraphTitle) {
         this.graphTitle = newGraphTitle;
     }
@@ -182,17 +190,21 @@ public class ScrollingGraph extends Actor {
         // using GraphPoints as they are general rectangles and are suited to the task
         // add x-axis
         GraphPoint xAxis = new GraphPoint(x, y, width, 3, new Color (0, 0, 0, 1));
+        otherComponents.add(xAxis);
         stage.addActor(xAxis);
         // add y-axis
         GraphPoint yAxis = new GraphPoint(x, y, 3, height, new Color (0, 0, 0, 1));
+        otherComponents.add(yAxis);
         stage.addActor(yAxis);
         // add x-ceiling
         GraphPoint xCeiling = new GraphPoint(x, y + height,
                 width, 2, new Color (0, 0, 0, 1));
+        otherComponents.add(xCeiling);
         stage.addActor(xCeiling);
         // add y-ceiling
         GraphPoint yCeiling = new GraphPoint(x + width, y,
                 2, height, new Color (0, 0, 0, 1));
+        otherComponents.add(yCeiling);
         stage.addActor(yCeiling);
         // add title
         graphTitle = new Label(title, new Label.LabelStyle(
@@ -202,6 +214,7 @@ public class ScrollingGraph extends Actor {
         graphTitle.setPosition(((int) (x + (width / 2))) - (int) (graphTitle.getWidth() / 2),
                 (int) (y + height - ((0.045 * height) * (worldHeight/height))));
         // graphTitle.setFontScale(2);
+        otherComponents.add(graphTitle);
         stage.addActor(graphTitle);
 
     }
@@ -247,22 +260,26 @@ public class ScrollingGraph extends Actor {
                     // up the graph
                     Label quantityLabel = new Label(String.valueOf(priceMax / 10 * labelNum), skin);
                     quantityLabel.setPosition(x + width - 20, y +  ((int) (height / 10) * labelNum) - 10);
-                    // quantityLabel.setAlignment(Align.right);
-                    // ^doesn't work
+                    // right align the label (fixed width necessary due to auto-resizing)
+                    quantityLabel.setWidth(45);
+                    quantityLabel.setAlignment(Align.right);
+
 
                     // add action for the labels to move to the left, following the dots. Unlike dots and tick number
                     // labels, the price labels will not be deleted upon reaching their resting place on the y-axis
                     // it is again important that the duration for dot movement and label movement be the same
                     MoveToAction leaveScreen = new MoveToAction();
-                    leaveScreen.setPosition(x - 25, y + ((int) (height / 10) * labelNum) - 10);
+                    leaveScreen.setPosition(x - 50, y + ((int) (height / 10) * labelNum) - 10);
                     leaveScreen.setDuration(50);
                     quantityLabel.addAction(leaveScreen);
 
+                    otherComponents.add(quantityLabel);
                     stage.addActor(quantityLabel);
 
                     // add horizontal guides
                     GraphPoint xGuide = new GraphPoint(x, y + ((int) (height / 10) * labelNum),
                             width, 1, new Color (0, 0, 0, 1));
+                    otherComponents.add(xGuide);
                     stage.addActor(xGuide);
                     labelNum += 1;
 
@@ -295,7 +312,30 @@ public class ScrollingGraph extends Actor {
             if (dots.get(i).getX() <= xThreshold + 3){
                 dots.get(i).remove();
                 dots.remove(i);
+                i--;
             }
+        }
+    }
+
+    public void deleteAll(ArrayList<GraphPoint> dots, ArrayList<Label> labels, ArrayList<Actor> otherComponents){
+        // remove all graph points
+        for (int i = 0; i < dots.size(); i++){
+            dots.get(i).remove();
+            dots.remove(i);
+            i--;
+
+        }
+        // remove all labels
+        for (int i = 0; i < labels.size(); i++){
+            labels.get(i).remove();
+            labels.remove(i);
+            i--;
+        }
+        // remove all the other components
+        for (int i = 0; i < otherComponents.size(); i++){
+            otherComponents.get(i).remove();
+            otherComponents.remove(i);
+            i--;
         }
     }
 
@@ -306,6 +346,7 @@ public class ScrollingGraph extends Actor {
             if (labels.get(i).getX() <= xThreshold + 3){
                 labels.get(i).remove();
                 labels.remove(i);
+                i--;
             }
         }
     }
