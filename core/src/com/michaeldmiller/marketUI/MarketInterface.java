@@ -57,12 +57,15 @@ public class MarketInterface implements Screen {
     VerticalGroup marketGoods;
     Label infoLabel;
     HashMap<Integer, ScrollingGraph> graphs;
+    HashMap<String, String> graphTypesLookup;
+    int numberOfGraphsSelectedByUser;
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
                           ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
         this.graphs = new HashMap<>();
+        numberOfGraphsSelectedByUser = 0;
         firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
@@ -202,6 +205,7 @@ public class MarketInterface implements Screen {
 
          */
 
+        /*
         Skin secondSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         int secondFrame = 0;
         // setup color lookup table
@@ -238,9 +242,11 @@ public class MarketInterface implements Screen {
         unmetNeedGraph.makeGraph();
         graphs.put(3, unmetNeedGraph);
 
+         */
+
 
         // information panel: graph selectors and information label
-        VerticalGroup informationPanel = new VerticalGroup();
+        Table informationPanel = new Table();
         Button zero = new CheckBox("0", firstSkin);
         Button one = new CheckBox("1", firstSkin);
         Button two = new CheckBox("2", firstSkin);
@@ -255,7 +261,8 @@ public class MarketInterface implements Screen {
         numberOfGraphs.setMaxCheckCount(1);
         // create options
         Label numberOfGraphsPrompt = new Label("Number of Graphs", firstSkin);
-        informationPanel.addActor(numberOfGraphsPrompt);
+        informationPanel.add(numberOfGraphsPrompt);
+        informationPanel.row();
         Table graphNumberCheckBoxes = new Table();
         graphNumberCheckBoxes.add(zero).padRight(10);
         graphNumberCheckBoxes.add(one).padRight(10);
@@ -263,11 +270,13 @@ public class MarketInterface implements Screen {
         graphNumberCheckBoxes.add(three).padRight(10);
         graphNumberCheckBoxes.add(four).padRight(10);
 
-        informationPanel.addActor(graphNumberCheckBoxes);
+        informationPanel.add(graphNumberCheckBoxes);
+        informationPanel.row();
 
         // graph type selector horizontal group
         HorizontalGroup graphTypeGroup = new HorizontalGroup();
-        informationPanel.addActor(graphTypeGroup);
+        informationPanel.add(graphTypeGroup);
+        informationPanel.row();
 
 
 
@@ -279,16 +288,19 @@ public class MarketInterface implements Screen {
         graphChoices.add(3);
         graphChoices.add(4);
         numberOfGraphsSelector.setItems(graphChoices);
-        informationPanel.addActor(numberOfGraphsSelector);
+        informationPanel.add(numberOfGraphsSelector);
+        informationPanel.row();
 
         final VerticalGroup typeSelectors = new VerticalGroup();
         // typeSelectors.addActor(new Label("", firstSkin));
-        informationPanel.addActor(typeSelectors);
+        informationPanel.add(typeSelectors);
+        informationPanel.row();
 
         numberOfGraphsSelector.addListener(new ChangeListener(){
             @Override
             public void changed(ChangeEvent changeEvent, Actor actor) {
-                System.out.println(numberOfGraphsSelector.getSelected());
+                // change selected number of graphs
+                numberOfGraphsSelectedByUser = numberOfGraphsSelector.getSelected();
                 // get current amount of graphs
                 int currentNumberOfSelectors = typeSelectors.getChildren().size;
                 // determine if difference is positive or negative
@@ -349,9 +361,8 @@ public class MarketInterface implements Screen {
                                 }
 
                                 // with the location in hand, run the graph creation function
-                                System.out.println(location + " " + graphTypeSelector.getSelected());
                                 // createGraph(index,
-                                createGraph(0, "");
+                                createGraph(location, graphTypeSelector.getSelected());
 
                             }
                         });
@@ -364,12 +375,12 @@ public class MarketInterface implements Screen {
             }
         });
 
-        // need to create select boxes of the appropriate amount
-
         // info box, add information label
         // create scroll pane
+        infoLabel = new Label("------------Information------------", firstSkin);
+        infoLabel.setWrap(true);
         final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
-        informationPanel.addActor(informationScrollPane);
+        informationPanel.add(informationScrollPane).width(250);
         masterTable.add(informationPanel).width(250).center().top();
 
         // add bottom row
@@ -378,76 +389,99 @@ public class MarketInterface implements Screen {
         // masterTable.add(createBottomRow()).align(Align.left).top().padLeft(10);
         // center align
         masterTable.add(createBottomRow()).top();
+        masterTable.add();
 
         instantiateMarket();
 
-
-        /*
-
-        // add buttons
-        addButtons();
-
-
-        // make adjustment fields
-        makeAdjustmentFields();
-
-        // add price graph
-        priceGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        // add profession graph
-        professionGraph = new ScrollingGraph((int) (0.025 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        // add money graph
-        moneyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.000005, "Money", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        // unmet needs graph
-        unmetNeedGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.15 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        // market inventory graph
-        marketInventoryGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.005, "Inventory", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        // agent property graph
-        agentPropertyGraph = new ScrollingGraph((int) (0.425 * marketUI.worldWidth), (int) (0.55 * marketUI.worldHeight),
-                (int) (0.35 * marketUI.worldWidth), (int) (0.35 * marketUI.worldHeight), marketUI.worldWidth,
-                marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-
-
-        priceGraph.makeGraph();
-        professionGraph.makeGraph();
-        // moneyGraph.makeGraph();
-        unmetNeedGraph.makeGraph();
-        //marketInventoryGraph.makeGraph();
-        agentPropertyGraph.makeGraph();
-
-         */
     }
 
     private void createGraph(int index, String graphType){
         // determine if graph already exists with that index
-        /*
+        System.out.println(index);
+
         if (graphs.containsKey(index)){
             // if it does, get it and delete it.
             ScrollingGraph oldGraph = graphs.get(index);
-            // remove the dots (test)
-            for (GraphPoint g : oldGraph.getDots()){
-                g.remove();
-            }
+            // delete the graph components, and then remove the graph from the graphs list
+            oldGraph.deleteAll(oldGraph.getDots(), oldGraph.getLabels(), oldGraph.getOtherComponents());
+            graphs.remove(index);
         }
 
-         */
-        System.out.println("fired");
-        // priceGraph.deleteAll(priceGraph.getDots(), priceGraph.getLabels(), priceGraph.getOtherComponents());
+        // Left, Center, and Right X padding of 70, Left, Center, and Right Padding of 45, noting the 55 height
+        // of the lower bar. Given a target width of 1350, confined by 250 wide info box, these are the resulting
+        // coordinates of each graph slot:
+        // Slot 1: 70, 480;
+        // Slot 2: 70, 100;
+        // Slot 3: 710, 480;
+        // Slot 4: 710, 100;
+
+        // inferred dimensions of each graph given the number of graphs:
+        // three or four: (570, 335)
+        // two: (1210, 335)
+        // one: (1210, 715)
+
+        // determine x and y coordinates
+        int xCoordinate = 0;
+        if (index == 0 || index == 1){
+            xCoordinate = 70;
+        } else{
+            xCoordinate = 710;
+        }
+        int yCoordinate = 0;
+        if(index == 0 || index == 2){
+            yCoordinate = 480;
+        } else{
+            yCoordinate = 100;
+        }
+        // determine width and height
+        int width = 0;
+        int height = 0;
+        // use number of possible graphs selected, not the current graph number
+        if (numberOfGraphsSelectedByUser == 1){
+            width = 1210;
+            height = 715;
+            yCoordinate = 100;
+        } else if (numberOfGraphsSelectedByUser == 2){
+            width = 1210;
+            height = 335;
+        } else{
+            width = 570;
+            height = 335;
+        }
+
+
+        // create the appropriate graph
+        // list of graph types
+        if (graphType.equals("Price")){
+            PriceGraph priceGraph = new PriceGraph(xCoordinate, yCoordinate, width, height,
+                    marketUI.worldWidth, marketUI.worldHeight, scale, "Prices",
+                    new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
+            priceGraph.makeGraph();
+            graphs.put(index, priceGraph);
+
+        } else if (graphType.equals("Producers")){
+            ProfessionGraph professionGraph = new ProfessionGraph(xCoordinate, yCoordinate, width, height,
+            marketUI.worldWidth, marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers",
+                    new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
+            professionGraph.makeGraph();
+            graphs.put(index, professionGraph);
+
+        } else if (graphType.equals("Agent")){
+            AgentPropertyGraph agentGraph = new AgentPropertyGraph(xCoordinate, yCoordinate, width, height,
+                    marketUI.worldWidth, marketUI.worldHeight, 0.005, "Agent: " + agentID,
+                    new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
+            agentGraph.makeGraph();
+            graphs.put(index, agentGraph);
+
+        } else if (graphType.equals("Unmet Needs")){
+            TotalUnmetNeedsGraph totalUnmetNeedsGraph = new TotalUnmetNeedsGraph(xCoordinate, yCoordinate, width, height,
+                    marketUI.worldWidth, marketUI.worldHeight, 0.01, "Unmet Needs",
+                    new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
+            totalUnmetNeedsGraph.makeGraph();
+            graphs.put(index, totalUnmetNeedsGraph);
+
+        }
+
 
 
     }

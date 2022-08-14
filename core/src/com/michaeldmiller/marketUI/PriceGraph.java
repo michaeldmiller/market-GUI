@@ -10,8 +10,8 @@ import java.util.HashMap;
 public class PriceGraph extends ScrollingGraph{
     public PriceGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale, String title,
                       HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup, Skin skin,
-                      int frame, Stage stage) {
-        super(x, y, width, height, worldWidth, worldHeight, scale, title, dataCoordinates, colorLookup, skin, frame, stage);
+                      int frame, Stage stage, boolean graphNewlyCreated) {
+        super(x, y, width, height, worldWidth, worldHeight, scale, title, dataCoordinates, colorLookup, skin, frame, stage, graphNewlyCreated);
     }
 
     @Override

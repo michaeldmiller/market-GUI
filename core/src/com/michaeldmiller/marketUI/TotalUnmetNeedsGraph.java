@@ -9,11 +9,11 @@ import com.michaeldmiller.economicagents.Consumption;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UnmetNeedsGraph extends ScrollingGraph{
-    public UnmetNeedsGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
+public class TotalUnmetNeedsGraph extends ScrollingGraph{
+    public TotalUnmetNeedsGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
                            String title, HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
-                           Skin skin, int frame, Stage stage) {
-        super(x, y, width, height, worldWidth, worldHeight, scale, title, dataCoordinates, colorLookup, skin, frame, stage);
+                           Skin skin, int frame, Stage stage, boolean graphNewlyCreated) {
+        super(x, y, width, height, worldWidth, worldHeight, scale, title, dataCoordinates, colorLookup, skin, frame, stage, graphNewlyCreated);
     }
 
     @Override

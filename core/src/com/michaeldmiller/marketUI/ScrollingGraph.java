@@ -35,10 +35,11 @@ public class ScrollingGraph extends Actor {
     private ArrayList<Label> labels;
     private ArrayList<Actor> otherComponents;
     private Label graphTitle;
+    private boolean graphNewlyCreated;
 
     public ScrollingGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale,
                           String title, HashMap<String, Integer> dataCoordinates, HashMap<String, Color> colorLookup,
-                          Skin skin, int frame, Stage stage){
+                          Skin skin, int frame, Stage stage, boolean graphNewlyCreated){
         this.x = x;
         this.y = y;
         this.width = width;
@@ -56,6 +57,7 @@ public class ScrollingGraph extends Actor {
         this.otherComponents = new ArrayList<Actor>();
         this.labels = new ArrayList<Label>();
         this.graphTitle = new Label("", skin);
+        this.graphNewlyCreated = graphNewlyCreated;
     }
     // accessors
     public float getX(){
@@ -96,6 +98,9 @@ public class ScrollingGraph extends Actor {
     }
     public Stage getStage(){
         return stage;
+    }
+    public boolean isGraphNewlyCreated(){
+        return graphNewlyCreated;
     }
     public ArrayList<GraphPoint> getDots() {
         return dots;
@@ -148,6 +153,9 @@ public class ScrollingGraph extends Actor {
     }
     public void setStage(Stage newStage) {
         this.stage = newStage;
+    }
+    public void setGraphNewlyCreated(boolean graphNewlyCreatedValue){
+        this.graphNewlyCreated = graphNewlyCreatedValue;
     }
     public void setDots(ArrayList<GraphPoint> newDots) {
         this.dots = newDots;
@@ -248,7 +256,7 @@ public class ScrollingGraph extends Actor {
             stage.addActor(timeLabel);
         }
 
-        if (frame == 1){
+        if (frame == 1 || graphNewlyCreated){
             // set range of prices to be covered in the graph
             int priceMax = (int) (height * 1.0 /scale);
             int labelNum = 1;
@@ -287,6 +295,8 @@ public class ScrollingGraph extends Actor {
 
                 }
             }
+            // reset graph newly created value
+            graphNewlyCreated = false;
         }
     }
     public void updateGraphTitle(){
