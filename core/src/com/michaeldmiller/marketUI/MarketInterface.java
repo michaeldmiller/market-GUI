@@ -5,22 +5,22 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.Select;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import com.michaeldmiller.economicagents.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import static com.michaeldmiller.economicagents.MarketMain.*;
@@ -182,103 +182,13 @@ public class MarketInterface implements Screen {
         // this program is fixed to a display size of 1600 x 900, although converting them back into world size ratios,
         // as done previously, may be possible.
 
-
-        // Left, Center, and Right X padding of 70, Left, Center, and Right Padding of 45, noting the 55 height
-        // of the lower bar. Given a target width of 1350, confined by 250 wide info box, these are the resulting
-        // coordinates of each graph slot:
-        // Slot 1: 70, 480;
-        // Slot 2: 70, 100;
-        // Slot 3: 710, 480;
-        // Slot 4: 710, 100;
-
-        // inferred dimensions of each graph given the number of graphs:
-        // three or four: (570, 335)
-        // two: (1210, 335)
-        // one: (1210, 715)
-
-        // add price graph;
-        /*
-        priceGraph = new ScrollingGraph(70,  480, 570, 335, marketUI.worldWidth,
-                marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        priceGraph.makeGraph();
-
-         */
-
-        /*
-        Skin secondSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
-        int secondFrame = 0;
-        // setup color lookup table
-        HashMap<String,Color> secondColorLookup = new HashMap<String, Color>();
-        secondColorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
-        secondColorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
-        secondColorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
-        secondColorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
-        secondColorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
-        // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
-        secondColorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
-        PriceGraph notAnAttributePriceGraph = new PriceGraph(70,  480, 570, 335, 1600,
-                900, 1.75, "Prices", new HashMap<String, Integer>(),
-                secondColorLookup, secondSkin, 1, stage);
-        notAnAttributePriceGraph.makeGraph();
-        ArrayList<PriceGraph> test = new ArrayList<>();
-        graphs.put(0, notAnAttributePriceGraph);
-        // add profession graph
-        professionGraph = new ProfessionGraph(70, 100, 570, 335, marketUI.worldWidth,
-                marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        professionGraph.makeGraph();
-        graphs.put(1, professionGraph);
-        // agent property graph
-        agentPropertyGraph = new AgentPropertyGraph(710, 480, 570, 335, marketUI.worldWidth,
-                marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        agentPropertyGraph.makeGraph();
-        graphs.put(2, agentPropertyGraph);
-        // unmet needs graph
-        unmetNeedGraph = new UnmetNeedsGraph(710, 100, 570,335, marketUI.worldWidth,
-                marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
-                colorLookup, firstSkin, frame, stage);
-        unmetNeedGraph.makeGraph();
-        graphs.put(3, unmetNeedGraph);
-
-         */
-
-
         // information panel: graph selectors and information label
         Table informationPanel = new Table();
-        Button zero = new CheckBox("0", firstSkin);
-        Button one = new CheckBox("1", firstSkin);
-        Button two = new CheckBox("2", firstSkin);
-        Button three = new CheckBox("3", firstSkin);
-        Button four = new CheckBox("4", firstSkin);
-        final ButtonGroup<Button> numberOfGraphs = new ButtonGroup<>();
-        numberOfGraphs.add(zero, one, two, three, four);
-        // set zero to checked
-        numberOfGraphs.setChecked("0");
-        // make sure one box is checked at all times
-        numberOfGraphs.setMinCheckCount(1);
-        numberOfGraphs.setMaxCheckCount(1);
+
+        Table numberOfGraphsSelectionTable = new Table();
         // create options
-        Label numberOfGraphsPrompt = new Label("Number of Graphs", firstSkin);
-        informationPanel.add(numberOfGraphsPrompt);
-        informationPanel.row();
-        Table graphNumberCheckBoxes = new Table();
-        graphNumberCheckBoxes.add(zero).padRight(10);
-        graphNumberCheckBoxes.add(one).padRight(10);
-        graphNumberCheckBoxes.add(two).padRight(10);
-        graphNumberCheckBoxes.add(three).padRight(10);
-        graphNumberCheckBoxes.add(four).padRight(10);
-
-        informationPanel.add(graphNumberCheckBoxes);
-        informationPanel.row();
-
-        // graph type selector horizontal group
-        HorizontalGroup graphTypeGroup = new HorizontalGroup();
-        informationPanel.add(graphTypeGroup);
-        informationPanel.row();
-
-
+        Label numberOfGraphsPrompt = new Label("Number of Graphs:", firstSkin);
+        numberOfGraphsSelectionTable.add(numberOfGraphsPrompt).padRight(10);
 
         final SelectBox<Integer> numberOfGraphsSelector = new SelectBox<>(firstSkin);
         Array<Integer> graphChoices = new Array<>();
@@ -288,11 +198,17 @@ public class MarketInterface implements Screen {
         graphChoices.add(3);
         graphChoices.add(4);
         numberOfGraphsSelector.setItems(graphChoices);
-        informationPanel.add(numberOfGraphsSelector);
+        numberOfGraphsSelectionTable.add(numberOfGraphsSelector);
+        informationPanel.add(numberOfGraphsSelectionTable);
         informationPanel.row();
 
+        // type label
+        Label typePromptLabel = new Label("Graph Type", firstSkin);
+        informationPanel.add(typePromptLabel);
+        informationPanel.row();
+
+        // add group for type selectors
         final VerticalGroup typeSelectors = new VerticalGroup();
-        // typeSelectors.addActor(new Label("", firstSkin));
         informationPanel.add(typeSelectors);
         informationPanel.row();
 
@@ -318,8 +234,9 @@ public class MarketInterface implements Screen {
                     // if positive, add the requested number to the type selector
                     for (int i = 0; i < numberOfChange; i++){
                         // create select box
-                        final SelectBox<String> graphTypeSelector = new SelectBox<String>(firstSkin);
+                        final SelectBox<String> graphTypeSelector = new SelectBox<>(firstSkin);
                         Array<String> graphTypes = new Array<>();
+                        graphTypes.add("");
                         graphTypes.add("Price");
                         graphTypes.add("Producers");
                         graphTypes.add("Agent");
@@ -372,6 +289,8 @@ public class MarketInterface implements Screen {
                     }
 
                 }
+                // if the number has been changed, redraw all the graphs
+                redrawGraphs();
             }
         });
 
@@ -397,7 +316,6 @@ public class MarketInterface implements Screen {
 
     private void createGraph(int index, String graphType){
         // determine if graph already exists with that index
-        System.out.println(index);
 
         if (graphs.containsKey(index)){
             // if it does, get it and delete it.
@@ -482,8 +400,45 @@ public class MarketInterface implements Screen {
 
         }
 
+    }
+    private void redrawGraphs(){
+        // delete all the graphs
+        for (Iterator<Map.Entry<Integer, ScrollingGraph>> iterator = graphs.entrySet().iterator(); iterator.hasNext();){
+            Map.Entry<Integer, ScrollingGraph> graphForDeletion = iterator.next();
+            ScrollingGraph oldGraph = graphForDeletion.getValue();
+            // delete the graph components, and then remove the graph from the graphs list
+            oldGraph.deleteAll(oldGraph.getDots(), oldGraph.getLabels(), oldGraph.getOtherComponents());
+            iterator.remove();
+        }
+
+        // redraw all graphs using the graph creation logic
+        // go to table containing the graph selectors
+        // located at the fourth cell of the master table, third child of the infobox. Each table contained within
+        // has a label and a select box. Run create graph on the index and the value of the select box
+        Table InfoPanelCell = (Table) masterTable.getChild(3);
+        VerticalGroup graphTypeSelectors = (VerticalGroup) InfoPanelCell.getChild(2);
+        int index = 0;
+        for (Actor tableActor : graphTypeSelectors.getChildren()){
+            // cast to table
+            Table table = (Table) tableActor;
+            // get select box at index 1. Despite complaints, this is a select box of strings.
+            SelectBox<String> selectBox = (SelectBox<String>) table.getChild(1);
+            // create graph and increment index
+            createGraph(index, selectBox.getSelected());
+            index++;
+        }
+
+    }
 
 
+    private void deleteGraph(int index) {
+        // pure deletion function for a graph, deletes the graph at the specified index, if it exists.
+        if (graphs.containsKey(index)) {
+            ScrollingGraph oldGraph = graphs.get(index);
+            // delete the graph components, and then remove the graph from the graphs list
+            oldGraph.deleteAll(oldGraph.getDots(), oldGraph.getLabels(), oldGraph.getOtherComponents());
+            graphs.remove(index);
+        }
     }
 
 
@@ -740,49 +695,6 @@ public class MarketInterface implements Screen {
 
 
     // graph update functions
-    public void updatePriceGraph(){
-        // update function for the price graph, gets price data from market and then turns it into coordinates
-        priceGraph.setFrame(frame);
-        HashMap<String, Integer> priceCoordinates = new HashMap<String, Integer>();
-        for (Price p : market.getPrices()){
-            priceCoordinates.put(p.getGood(), (int) (p.getCost() * (priceGraph.getScale())));
-        }
-        priceGraph.setDataCoordinates(priceCoordinates);
-        priceGraph.graphData();
-        priceGraph.removeGraphDots(priceGraph.getX(), priceGraph.getDots());
-        priceGraph.removeGraphLabels(priceGraph.getX(), priceGraph.getLabels());
-    }
-
-    public void updateProfessionGraph(){
-        // update function for the profession graph, gets job data from market and then turns it into coordinates
-        professionGraph.setFrame(frame);
-
-        HashMap<String, Integer> jobsTotal = new HashMap<String, Integer>();
-        // get total amount in each job by looping through all agents
-        for (Agent a : market.getAgents()){
-            if (!jobsTotal.containsKey(a.getProfession().getJob())){
-                jobsTotal.put(a.getProfession().getJob(), 1);
-            }
-            else {
-                String key = a.getProfession().getJob();
-                jobsTotal.put(key, jobsTotal.get(key) + 1);
-            }
-        }
-        // convert profession names to good names to match with color lookup
-        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
-        for (Map.Entry<String, Integer> professionTotal : jobsTotal.entrySet()){
-            for (JobOutput j : market.getJobOutputs()){
-                if (j.getJob().equals(professionTotal.getKey())){
-                    professionCoordinates.put(j.getGood(), (int) (professionTotal.getValue() *
-                            (professionGraph.getScale())));
-                }
-            }
-        }
-        professionGraph.setDataCoordinates(professionCoordinates);
-        professionGraph.graphData();
-        professionGraph.removeGraphDots(professionGraph.getX(), professionGraph.getDots());
-        professionGraph.removeGraphLabels(professionGraph.getX(), professionGraph.getLabels());
-    }
     public void updateMoneyGraph(){
         // update function for the money graph, gets agent money data from market and then turns it into coordinates
         moneyGraph.setFrame(frame);
@@ -813,35 +725,6 @@ public class MarketInterface implements Screen {
         moneyGraph.removeGraphLabels(moneyGraph.getX(), moneyGraph.getLabels());
     }
 
-    public void updateUnmetNeedGraph(){
-        // update function for the unmet need graph, gets unmet need data from each agent and then turns it into coordinates
-        unmetNeedGraph.setFrame(frame);
-
-        HashMap<String, Double> unmetNeedTotal = new HashMap<String, Double>();
-        // update 0.2.7: reflecting removal of performance intensive individual unmet needs, just grab the new agent total
-        for (Agent a : market.getAgents()){
-            for (Map.Entry<String, Consumption> consumptionEntry : a.getConsumption().entrySet()) {
-                if (!unmetNeedTotal.containsKey(consumptionEntry.getKey())){
-                    unmetNeedTotal.put(consumptionEntry.getKey(), consumptionEntry.getValue().getTotalUnmetNeed());
-                }
-                else {
-                    String key = consumptionEntry.getKey();
-                    unmetNeedTotal.put(key, unmetNeedTotal.get(key) + consumptionEntry.getValue().getTotalUnmetNeed());
-                }
-            }
-        }
-        // set doubles to integers
-        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> unmetEntryTotal : unmetNeedTotal.entrySet()){
-            int coordinateValue = (int) (unmetEntryTotal.getValue() * (unmetNeedGraph.getScale()));
-            professionCoordinates.put(unmetEntryTotal.getKey(), coordinateValue);
-        }
-
-        unmetNeedGraph.setDataCoordinates(professionCoordinates);
-        unmetNeedGraph.graphData();
-        unmetNeedGraph.removeGraphDots(unmetNeedGraph.getX(), unmetNeedGraph.getDots());
-        unmetNeedGraph.removeGraphLabels(unmetNeedGraph.getX(), unmetNeedGraph.getLabels());
-    }
     public void updateMarketInventoryGraph(){
         // update function for the price graph, gets price data from market and then turns it into coordinates
         marketInventoryGraph.setFrame(frame);
@@ -855,45 +738,7 @@ public class MarketInterface implements Screen {
         marketInventoryGraph.removeGraphLabels(marketInventoryGraph.getX(), marketInventoryGraph.getLabels());
     }
 
-    public void updateAgentPropertyGraph(String agentID){
-        // given the Agent ID, get properties about it for display
-        // start with available money and profession
-        // to start: get the agent
-        agentPropertyGraph.setFrame(frame);
-        MarketInfo fish = new MarketInfo("Fish", 0.35, 1, -0.4, 0.7,
-                10, 1, "Fisherman", 1);
-        ArrayList<MarketInfo> currentMarketProfile = new ArrayList<>();
-        currentMarketProfile.add(fish);
-        Agent chosenAgent = makeAgents(currentMarketProfile, 1).get(0);
-        for (Agent a : market.getAgents()){
-            if (a.getId().equals(agentID)){
-                chosenAgent = a;
-            }
-        }
-        // get properties of the chosen agent
-        HashMap<String, Integer> agentDataCoordinates = new HashMap<>();
 
-        // get money coordinate
-        int moneyCoordinate = (int) (chosenAgent.getMoney() * (agentPropertyGraph.getScale()));
-        agentDataCoordinates.put("MarketProperty", moneyCoordinate);
-
-        // get profession information
-        int professionCoordinate = (int) (agentPropertyGraph.getHeight() / 2);
-        String profession = chosenAgent.getProfession().getJob();
-        String professionGood = "MarketProperty";
-        for (JobOutput j : market.getJobOutputs()){
-            if (j.getJob().equals(profession)){
-                professionGood = j.getGood();
-            }
-        }
-        agentDataCoordinates.put(professionGood, professionCoordinate);
-        // System.out.println(agentDataCoordinates);
-
-        agentPropertyGraph.setDataCoordinates(agentDataCoordinates);
-        agentPropertyGraph.graphData();
-        agentPropertyGraph.removeGraphDots(agentPropertyGraph.getX(), agentPropertyGraph.getDots());
-        agentPropertyGraph.removeGraphLabels(agentPropertyGraph.getX(), agentPropertyGraph.getLabels());
-    }
     public Table createInstructions(){
         // create output table
         Table instructionsTable = new Table();
@@ -1071,295 +916,6 @@ public class MarketInterface implements Screen {
 
 
         return bottomRow;
-    }
-
-    public Table createCategoryLabels(){
-        // create labels and information toggle buttons for the market info categories
-        Table labels = new Table();
-
-        // good name label
-        Label name = new Label ("Good Name", firstSkin);
-        labels.add(name).padLeft(35).padRight(5);
-        // info button
-        ImageButton nameInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        nameInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Good Name:\n" + "This is the name of the good, e.g. Lumber, Metal, or Fish.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(nameInfoButton).padRight(30);
-
-
-        // good consumption label
-        Label consumption = new Label ("Base Consumption", firstSkin);
-        labels.add(consumption).padRight(5);
-        // info button
-        ImageButton consumptionInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        consumptionInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Base Consumption:\n" +
-                        "This value is the amount of the good that each agent will consume " +
-                        "per tick. This value is incredibly important, as it is one of two critical values which determine " +
-                        "whether a market equilibrium can be obtained. For equilibrium to exist, the sum of the base consumptions " +
-                        "of each good must be less than the sum of the base productions for each good. If this condition is met, " +
-                        "the market is in surplus and the market can naturally find an equilibrium. If it is not met, " +
-                        "wild behavior will ensue as the market is in a fundamental deficit. This value should be a " +
-                        "positive number.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(consumptionInfoButton).padRight(20);
-
-        // good production label
-        Label production = new Label ("Base Production", firstSkin);
-        labels.add(production).padRight(5);
-        // info button
-        ImageButton productionInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        productionInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Base Production:\n" +
-                        "This value is the amount of the good that each agent will produce " +
-                        "per tick. This value is incredibly important, as it is one of two critical values which determine " +
-                        "whether a market equilibrium can be obtained. For equilibrium to exist, the sum of the base consumptions " +
-                        "of each good must be less than the sum of the base productions for each good. If this condition is met, " +
-                        "the market is in surplus and the market can naturally find an equilibrium. If it is not met, " +
-                        "wild behavior will ensue as the market is in a fundamental deficit. This value should be a " +
-                        "positive number.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(productionInfoButton).padRight(65);
-
-        // price elasticity label
-        Label priceElasticity = new Label ("Price Elasticities", firstSkin);
-        labels.add(priceElasticity).padRight(5);
-        // info button
-        ImageButton priceElasticityInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        priceElasticityInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                // information source: https://en.wikipedia.org/w/index.php?title=Price_elasticity_of_demand&oldid=1100433334
-                infoLabel.setText("Price Elasticities:\n" +
-                        "Price Elasticity of Demand (Left Slider), Price Elasticity of Supply (Right Dropdown Menu)\n" +
-                        "These values are the elasticities of supply and demand for the given good. Essentially, it " +
-                        "quantifies how sensitive an agent is to price when deciding whether to consume (demand) or " +
-                        "produce (supply) the good. All demand elasticities are negative, since people in general " +
-                        "want to buy less of a given thing if it is more expensive, and supply elasticities are " +
-                        "positive, since producers in general would like to make more of a given product if it is " +
-                        "more expensive and they can therefore turn a bigger profit. For demand elasticity, the " +
-                        "largest possible value here is almost, but not quite zero. A larger magnitude number means " +
-                        "that the agent is very sensitive to price on this particular good, this is said to be elastic " +
-                        "and in the real world describes things like luxury and consumer goods. Sample real values " +
-                        "include -1.5 for vacation travel and -2.8 for automobiles. Smaller magnitude numbers mean the " +
-                        "agent is very insensitive to price, this is said to be inelastic and in the real world " +
-                        "describes staple goods like food (-0.5), oil (-0.4) and medicine (-0.31).\nSince agents " +
-                        "cannot currently change the amount of a good they produce in the short term, this creation " +
-                        "menu forces the elasticity of supply to be zero (the only option in the drop down menu on " +
-                        "the right) to reflect this inflexibility.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(priceElasticityInfoButton).padRight(100);
-
-        // good base cost label
-        Label baseValues = new Label ("Base Values", firstSkin);
-        labels.add(baseValues).padRight(5);
-        // info button
-        ImageButton baseValuesInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        baseValuesInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Base Cost and Weight:\n" +
-                        "These values are multipliers which represents user defined offsets in the intrinsic " +
-                        "worth assigned to a good. They cannot be negative.\n" +
-                        "In practice, it is best to set all base values in a market to the " +
-                        "same value. If they are different, the market has a very difficult time finding " +
-                        "equilibrium, as agents will habitually prefer goods with higher base values without any" +
-                        "kind of justification internal to the market.\n" +
-                        "Base Cost is set with the entry box on the left, and Base Weight is set with the drop down " +
-                        "box on the right, at present the only possible option is 1. Base cost is applied uniformly" +
-                        "to offset the price of all goods, while the base weight sets the agents' buying priority" +
-                        "multiplier.\n" +
-                        "It is strongly recommended that base cost be set to 10 for all goods.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(baseValuesInfoButton).padRight(75);
-
-        // good job name label
-        Label jobName = new Label ("Job Name", firstSkin);
-        labels.add(jobName).padRight(5);
-        // info button
-        ImageButton jobNameInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        jobNameInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Job Name:\n" +
-                        "This is the name of the job or profession associated with producing this good, e.g. " +
-                        "a fisherman produces fish and a farmer produces grain.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(jobNameInfoButton).padRight(75);
-
-        // job chance label
-        Label chance = new Label ("Job Chance", firstSkin);
-        labels.add(chance).padRight(5);
-        // info button
-        ImageButton chanceInfoButton = new ImageButton(infoIcon, infoIconClicked);
-        chanceInfoButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // change information box text to description
-                infoLabel.setText("Job Chance:\n" +
-                        "This is the chance that an agent in the market will have the profession which " +
-                        "produces the specified good at the start of the simulation. The system which makes this " +
-                        "random choice works based upon the ratios between the given values and will therefore work " +
-                        "for any number. However, to understand the choice it is making, it is best to make sure " +
-                        "that the sum of all of these values is 1. In that case, the job chance can be read as the " +
-                        "percent chance each agent will have the given profession.");
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        labels.add(chanceInfoButton).padRight(120);
-
-
-        return labels;
-    }
-
-    public Table createGood(){
-        // create table
-        Table good = new Table();
-
-        // get good name
-        TextField goodName = new TextField("Good", firstSkin);
-        good.add(goodName).padRight(10);
-
-        // get baseConsumption
-        TextField baseConsumption = new TextField("Base Consumption", firstSkin);
-        good.add(baseConsumption).padRight(10);
-
-        // get baseProduction
-        TextField baseProduction = new TextField("Base Production", firstSkin);
-        good.add(baseProduction).padRight(10);
-
-        // get price elasticity of demand
-        final Label elasticityDemandLabel = new Label("-5.00", firstSkin);
-        // set fixed size so value change does not slightly resize the label
-        // condensed layout:
-        // good.add(elasticityDemandLabel).size(45, 20);
-        // spacious layout:
-        good.add(elasticityDemandLabel).size(45, 40);
-
-        final Slider elasticityDemand = new Slider(-5f, -0.01f, 0.1f, false, firstSkin);
-        good.add(elasticityDemand).padRight(10);
-        elasticityDemand.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // get the value of the slider, round it to two decimal places, set it as the label text
-                elasticityDemandLabel.setText(String.format("%.2f", elasticityDemand.getValue()));
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-
-        // get price elasticity of supply (must be 0 at present)
-        SelectBox<Integer> supplyElasticity = new SelectBox<>(firstSkin);
-        Array<Integer> supplyChoices = new Array<>();
-        supplyChoices.add(0);
-        supplyElasticity.setItems(supplyChoices);
-        good.add(supplyElasticity).padRight(10);
-
-        // get good base cost multiplier
-        TextField baseCost = new TextField("Base Cost", firstSkin);
-        good.add(baseCost).padRight(10);
-
-        // get base good weight
-        SelectBox<Integer> baseWeight = new SelectBox<>(firstSkin);
-        Array<Integer> weightChoices = new Array<>();
-        weightChoices.add(1);
-        baseWeight.setItems(weightChoices);
-        good.add(baseWeight).padRight(10);
-
-        // get job name
-        TextField jobName = new TextField("Job Name", firstSkin);
-        good.add(jobName).padRight(10);
-
-        // get job chance (between 0 and 1)
-        final Label jobChanceLabel = new Label("0.00", firstSkin);
-        // set fixed size so value change does not slightly resize the label
-        // condensed layout:
-        // good.add(jobChanceLabel).size(40, 20);
-        // spacious layout:
-        good.add(jobChanceLabel).size(40);
-
-
-        final Slider jobChance = new Slider(0f, 1f, 0.05f, false, firstSkin);
-        good.add(jobChance).padRight(10);
-        jobChance.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // get the value of the slider, round it to two decimal places, set it as the label text
-                jobChanceLabel.setText(String.format("%.2f", jobChance.getValue()));
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-
-
-        // remove button
-        Button remove = new TextButton("Remove", firstSkin);
-        good.add(remove);
-        remove.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // get the table that the good belongs to and remove it from the marketGoods group
-                marketGoods.removeActor(event.getListenerActor().getParent());
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-
-        // return the finished good table
-        return good;
-
     }
 
 }
