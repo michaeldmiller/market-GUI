@@ -62,6 +62,7 @@ public class MarketInterface implements Screen {
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
                           ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
+        this.graphs = new HashMap<>();
         firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
         frame = 0;
         secondFraction = 0.0167;
@@ -193,26 +194,49 @@ public class MarketInterface implements Screen {
         // one: (1210, 715)
 
         // add price graph;
+        /*
         priceGraph = new ScrollingGraph(70,  480, 570, 335, marketUI.worldWidth,
                 marketUI.worldHeight, scale, "Prices", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         priceGraph.makeGraph();
-        // graphs.put(0, priceGraph);
+
+         */
+
+        Skin secondSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
+        int secondFrame = 0;
+        // setup color lookup table
+        HashMap<String,Color> secondColorLookup = new HashMap<String, Color>();
+        secondColorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
+        secondColorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
+        secondColorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
+        secondColorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+        secondColorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
+        // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
+        secondColorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
+        PriceGraph notAnAttributePriceGraph = new PriceGraph(70,  480, 570, 335, 1600,
+                900, 1.75, "Prices", new HashMap<String, Integer>(),
+                secondColorLookup, secondSkin, 1, stage);
+        notAnAttributePriceGraph.makeGraph();
+        ArrayList<PriceGraph> test = new ArrayList<>();
+        graphs.put(0, notAnAttributePriceGraph);
         // add profession graph
-        professionGraph = new ScrollingGraph(70, 100, 570, 335, marketUI.worldWidth,
+        professionGraph = new ProfessionGraph(70, 100, 570, 335, marketUI.worldWidth,
                 marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         professionGraph.makeGraph();
+        graphs.put(1, professionGraph);
         // agent property graph
-        agentPropertyGraph = new ScrollingGraph(710, 480, 570, 335, marketUI.worldWidth,
+        agentPropertyGraph = new AgentPropertyGraph(710, 480, 570, 335, marketUI.worldWidth,
                 marketUI.worldHeight, 0.005, "Agent: " + agentID, new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         agentPropertyGraph.makeGraph();
+        graphs.put(2, agentPropertyGraph);
         // unmet needs graph
-        unmetNeedGraph = new ScrollingGraph(710, 100, 570,335, marketUI.worldWidth,
+        unmetNeedGraph = new UnmetNeedsGraph(710, 100, 570,335, marketUI.worldWidth,
                 marketUI.worldHeight, 0.01, "Unmet Needs", new HashMap<String, Integer>(),
                 colorLookup, firstSkin, frame, stage);
         unmetNeedGraph.makeGraph();
+        graphs.put(3, unmetNeedGraph);
 
 
         // information panel: graph selectors and information label
@@ -423,7 +447,7 @@ public class MarketInterface implements Screen {
 
          */
         System.out.println("fired");
-        priceGraph.deleteAll(priceGraph.getDots(), priceGraph.getLabels(), priceGraph.getOtherComponents());
+        // priceGraph.deleteAll(priceGraph.getDots(), priceGraph.getLabels(), priceGraph.getOtherComponents());
 
 
     }
@@ -446,37 +470,14 @@ public class MarketInterface implements Screen {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            updatePriceGraph();
-            updateProfessionGraph();
-            // updateMoneyGraph();
-            updateUnmetNeedGraph();
-            // updateMarketInventoryGraph();
-            updateAgentPropertyGraph(agentID);
-            //prices.setText(market.getPrices().toString());
-            /*
-            for (Agent a : market.getAgents()) {
-                if (a.getId().equals(agentID)){
-                    moreInfo.setText(a.toString());
-                    // System.out.println(a.getConsumption().toString());
-                }
+
+            // update the graphs, if any exist
+            for (ScrollingGraph graph : graphs.values()){
+                graph.update(this);
+                graph.graphLabels();
             }
 
-             */
-
         }
-        priceGraph.graphLabels();
-        professionGraph.graphLabels();
-        agentPropertyGraph.graphLabels();
-        unmetNeedGraph.graphLabels();
-        /*
-
-        professionGraph.graphLabels();
-        // moneyGraph.graphLabels();
-        unmetNeedGraph.graphLabels();
-        // marketInventoryGraph.graphLabels();
-        agentPropertyGraph.graphLabels();
-
-         */
 
         stage.act(delta);
         stage.draw();

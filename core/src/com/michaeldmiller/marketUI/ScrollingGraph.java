@@ -350,4 +350,8 @@ public class ScrollingGraph extends Actor {
             }
         }
     }
+
+    public void update(MarketInterface marketInterface){
+        // to be overridden by subclasses
+    }
 }
