@@ -3,11 +3,11 @@ package com.michaeldmiller.economicagents;
 // given a good in a market, establish the following attributes
 public class MarketInfo {
     private final String good;
-    private final double baseConsumption;
-    private final double baseProduction;
-    private final double priceElasticityDemand;
-    private final double priceElasticitySupply;
-    private final double goodCost;
+    private double baseConsumption;
+    private double baseProduction;
+    private double priceElasticityDemand;
+    private double priceElasticitySupply;
+    private double goodCost;
     private final double priorityBaseWeight;
     private final String jobName;
     private final double jobChance;
@@ -59,6 +59,26 @@ public class MarketInfo {
 
     public double getJobChance() {
         return jobChance;
+    }
+
+    public void setBaseConsumption(double newBaseConsumption) {
+        this.baseConsumption = newBaseConsumption;
+    }
+
+    public void setBaseProduction(double newBaseProduction) {
+        this.baseProduction = newBaseProduction;
+    }
+
+    public void setPriceElasticityDemand(double newPriceElasticityDemand) {
+        this.priceElasticityDemand = newPriceElasticityDemand;
+    }
+
+    public void setPriceElasticitySupply(double newPriceElasticitySupply) {
+        this.priceElasticitySupply = newPriceElasticitySupply;
+    }
+
+    public void setGoodCost(double newGoodCost) {
+        this.goodCost = newGoodCost;
     }
 
     public String toString() {

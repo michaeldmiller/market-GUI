@@ -409,9 +409,9 @@ public class MarketCreationScreen implements Screen {
                         "i.e. they are all produced and consumed at the same rate and prioritized equally. There is a " +
                         "small surplus in the market, and production is distributed proportionally on initialization " +
                         "so that the market starts in a stable equilibrium. It is a great entry point, to get used to " +
-                        "how the simulation works and get used to the different display and control options that " +
+                        "how the simulation works and get accustomed to the different display and control options that " +
                         "are available. It is also an excellent platform to demonstrate the effects of modifying " +
-                        "various market attributes with the modification tools in the main interface. Note: " +
+                        "various market attributes with the modification tools in the market interface.\nNote: " +
                         "to respond better to differing performance requirements, presets still use a " +
                         "custom number of agents, as specified in the box to the left of the presets.");
             }

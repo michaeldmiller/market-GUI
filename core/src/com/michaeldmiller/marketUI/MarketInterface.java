@@ -17,10 +17,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import com.michaeldmiller.economicagents.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import static com.michaeldmiller.economicagents.MarketMain.*;
 
@@ -33,11 +30,11 @@ public class MarketInterface implements Screen {
     HashMap<String, Color> colorLookup;
     Label moreInfo;
     Label errorLabel;
-    TextField goodField;
+
     TextField consumptionField;
     TextField costField;
     TextField consumptionCostField;
-    TextField agentField;
+
     double scale;
     int frame;
     double secondFraction;
@@ -54,9 +51,13 @@ public class MarketInterface implements Screen {
     HashMap<Integer, ScrollingGraph> graphs;
     int numberOfGraphsSelectedByUser;
     boolean isPaused;
+    SelectBox<Integer> numberOfGraphsSelector;
+    VerticalGroup typeSelectors;
     SelectBox<String> modificationSelector;
-    TextField agentSelectorField;
+    TextField goodField;
     TextField modificationField;
+    TextField agentField;
+
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
@@ -175,14 +176,8 @@ public class MarketInterface implements Screen {
         Label numberOfGraphsPrompt = new Label("Number of Graphs:", firstSkin);
         numberOfGraphsSelectionTable.add(numberOfGraphsPrompt).padRight(10);
 
-        final SelectBox<Integer> numberOfGraphsSelector = new SelectBox<>(firstSkin);
-        Array<Integer> graphChoices = new Array<>();
-        graphChoices.add(0);
-        graphChoices.add(1);
-        graphChoices.add(2);
-        graphChoices.add(3);
-        graphChoices.add(4);
-        numberOfGraphsSelector.setItems(graphChoices);
+        // create number of graphs selector
+        numberOfGraphsSelector = createNumberOfGraphsSelector();
         numberOfGraphsSelectionTable.add(numberOfGraphsSelector);
         informationPanel.add(numberOfGraphsSelectionTable).padTop(5);
         informationPanel.row();
@@ -193,91 +188,9 @@ public class MarketInterface implements Screen {
         informationPanel.row();
 
         // add group for type selectors
-        final VerticalGroup typeSelectors = new VerticalGroup();
+        typeSelectors = new VerticalGroup();
         informationPanel.add(typeSelectors);
         informationPanel.row();
-
-        numberOfGraphsSelector.addListener(new ChangeListener(){
-            @Override
-            public void changed(ChangeEvent changeEvent, Actor actor) {
-                // change selected number of graphs
-                numberOfGraphsSelectedByUser = numberOfGraphsSelector.getSelected();
-                // get current amount of graphs
-                int currentNumberOfSelectors = typeSelectors.getChildren().size;
-                // determine if difference is positive or negative
-                int numberOfChange = numberOfGraphsSelector.getSelected() - currentNumberOfSelectors;
-                // if negative, remove from the end the requested number of times
-                if (numberOfChange < 0){
-                    for (int i = 0; i < (numberOfChange * -1); i++){
-                        // remove actor at the end of the list (have to adjust from size to index)
-                        Actor removed = typeSelectors.removeActorAt(currentNumberOfSelectors - 1, false);
-                        // clear the removed actor
-                        removed.clear();
-                        currentNumberOfSelectors--;
-                    }
-                } else if(numberOfChange > 0){
-                    // if positive, add the requested number to the type selector
-                    for (int i = 0; i < numberOfChange; i++){
-                        // create select box
-                        final SelectBox<String> graphTypeSelector = new SelectBox<>(firstSkin);
-                        Array<String> graphTypes = new Array<>();
-                        graphTypes.add("");
-                        graphTypes.add("Price");
-                        graphTypes.add("Producers");
-                        graphTypes.add("Agent");
-                        graphTypes.add("Unmet Needs");
-                        graphTypeSelector.setItems(graphTypes);
-
-                        // create table
-                        Table graphTypeSelectorTable = new Table();
-                        // create label for graph number
-                        int graphNumber = currentNumberOfSelectors + i + 1;
-
-                        // create initial graph (if not using starting blank choice)
-                        // createGraph(graphNumber, graphTypes.get(0));
-
-                        Label graphNumberLabel = new Label("Graph #" + graphNumber + ":", firstSkin);
-                        graphTypeSelectorTable.add(graphNumberLabel).padRight(10);
-
-
-                        graphTypeSelector.addListener(new ChangeListener(){
-                            @Override
-                            public void changed(ChangeEvent changeEvent, Actor actor) {
-                                // get current graph number
-                                int index = 0;
-                                int location = 0;
-                                // since each of these buttons is nested in a table, and we want to see the button's
-                                // index in the vertical group, need to get the button's grandparent and check
-                                // it against the grandchildren
-                                for (Actor tableActor : actor.getParent().getParent().getChildren()){
-                                    // find the actor from the list of actors in its parent
-                                    // loop through each child
-                                    Table table = (Table) tableActor;
-                                    for (Actor labelOrBox : table.getChildren()){
-                                        if (labelOrBox.equals(actor)){
-                                            location = index;
-                                        }
-                                    }
-                                    // if this box was not found yet, increment index
-                                    index++;
-                                }
-
-                                // with the location in hand, run the graph creation function
-                                // createGraph(index,
-                                createGraph(location, graphTypeSelector.getSelected());
-
-                            }
-                        });
-                        graphTypeSelectorTable.add(graphTypeSelector);
-
-                        typeSelectors.addActor(graphTypeSelectorTable);
-                    }
-
-                }
-                // if the number has been changed, redraw all the graphs
-                redrawGraphs();
-            }
-        });
 
         // info box, add information label
         // create scroll pane
@@ -292,6 +205,10 @@ public class MarketInterface implements Screen {
         modificationSelector = new SelectBox<>(firstSkin);
         Array<String> modificationChoices = new Array<>();
         modificationChoices.add("Base Consumption");
+        modificationChoices.add("Base Production");
+        modificationChoices.add("Price Elasticity of Demand");
+        modificationChoices.add("Price Elasticity of Supply");
+        modificationChoices.add("Base Cost");
         modificationSelector.setItems(modificationChoices);
         modificationsGroup.addActor(modificationSelector);
         // add agent entry box
@@ -335,6 +252,7 @@ public class MarketInterface implements Screen {
         instantiateMarket();
 
     }
+
 
     private void createGraph(int index, String graphType){
         // determine if graph already exists with that index
@@ -430,6 +348,7 @@ public class MarketInterface implements Screen {
         }
 
     }
+
     private void redrawGraphs(){
         // delete all the graphs
         for (Iterator<Map.Entry<Integer, ScrollingGraph>> iterator = graphs.entrySet().iterator(); iterator.hasNext();){
@@ -456,67 +375,6 @@ public class MarketInterface implements Screen {
             createGraph(index, selectBox.getSelected());
             index++;
         }
-
-    }
-
-
-    @Override
-    public void show() {
-
-    }
-
-    @Override
-    public void render(float delta) {
-        ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
-        Gdx.input.setInputProcessor(stage);
-        // only run market if simulation is not paused
-        if (!isPaused){
-            frame += 1;
-            // use second fraction to determine how often to call run market
-            if (frame % ((int) (secondFraction * 60)) == 0) {
-                try {
-                    runMarket(market, frame);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                // update the graphs, if any exist
-                for (ScrollingGraph graph : graphs.values()){
-                    graph.update(this);
-                    graph.graphLabels();
-                }
-
-            }
-
-        }
-        stage.act(delta);
-        stage.draw();
-
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-
-    }
-
-    @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-
-    }
-
-    @Override
-    public void dispose() {
 
     }
 
@@ -566,6 +424,101 @@ public class MarketInterface implements Screen {
 
     }
 
+    private SelectBox<Integer> createNumberOfGraphsSelector(){
+        SelectBox<Integer> numberOfGraphsSelectBox = new SelectBox<>(firstSkin);
+        Array<Integer> graphChoices = new Array<>();
+        graphChoices.add(0);
+        graphChoices.add(1);
+        graphChoices.add(2);
+        graphChoices.add(3);
+        graphChoices.add(4);
+        numberOfGraphsSelectBox.setItems(graphChoices);
+
+        numberOfGraphsSelectBox.addListener(new ChangeListener(){
+            @Override
+            public void changed(ChangeEvent changeEvent, Actor actor) {
+                // change selected number of graphs
+                numberOfGraphsSelectedByUser = numberOfGraphsSelector.getSelected();
+                // get current amount of graphs
+                int currentNumberOfSelectors = typeSelectors.getChildren().size;
+                // determine if difference is positive or negative
+                int numberOfChange = numberOfGraphsSelector.getSelected() - currentNumberOfSelectors;
+                // if negative, remove from the end the requested number of times
+                if (numberOfChange < 0){
+                    for (int i = 0; i < (numberOfChange * -1); i++){
+                        // remove actor at the end of the list (have to adjust from size to index)
+                        Actor removed = typeSelectors.removeActorAt(currentNumberOfSelectors - 1, false);
+                        // clear the removed actor
+                        removed.clear();
+                        currentNumberOfSelectors--;
+                    }
+                } else if(numberOfChange > 0){
+                    // if positive, add the requested number to the type selector
+                    for (int i = 0; i < numberOfChange; i++){
+                        // create select box
+                        final SelectBox<String> graphTypeSelector = new SelectBox<>(firstSkin);
+                        Array<String> graphTypes = new Array<>();
+                        graphTypes.add("");
+                        graphTypes.add("Price");
+                        graphTypes.add("Producers");
+                        graphTypes.add("Agent");
+                        graphTypes.add("Unmet Needs");
+                        graphTypeSelector.setItems(graphTypes);
+
+                        // create table
+                        Table graphTypeSelectorTable = new Table();
+                        // create label for graph number
+                        int graphNumber = currentNumberOfSelectors + i + 1;
+
+                        // create initial graph (if not using starting blank choice)
+                        // createGraph(graphNumber, graphTypes.get(0));
+
+                        Label graphNumberLabel = new Label("Graph #" + graphNumber + ":", firstSkin);
+                        graphTypeSelectorTable.add(graphNumberLabel).padRight(10);
+
+
+                        graphTypeSelector.addListener(new ChangeListener(){
+                            @Override
+                            public void changed(ChangeEvent changeEvent, Actor actor) {
+                                // get current graph number
+                                int index = 0;
+                                int location = 0;
+                                // since each of these buttons is nested in a table, and we want to see the button's
+                                // index in the vertical group, need to get the button's grandparent and check
+                                // it against the grandchildren
+                                for (Actor tableActor : actor.getParent().getParent().getChildren()){
+                                    // find the actor from the list of actors in its parent
+                                    // loop through each child
+                                    Table table = (Table) tableActor;
+                                    for (Actor labelOrBox : table.getChildren()){
+                                        if (labelOrBox.equals(actor)){
+                                            location = index;
+                                        }
+                                    }
+                                    // if this box was not found yet, increment index
+                                    index++;
+                                }
+
+                                // with the location in hand, run the graph creation function
+                                // createGraph(index,
+                                createGraph(location, graphTypeSelector.getSelected());
+
+                            }
+                        });
+                        graphTypeSelectorTable.add(graphTypeSelector);
+
+                        typeSelectors.addActor(graphTypeSelectorTable);
+                    }
+
+                }
+                // if the number has been changed, redraw all the graphs
+                redrawGraphs();
+            }
+        });
+
+        return numberOfGraphsSelectBox;
+    }
+
     private Button createModifyButton(){
         // create the modification button, which takes the modification category from the selection box, and the
         // new values from the appropriate user entry points (agent text entry field and/or main text entry field)
@@ -577,12 +530,91 @@ public class MarketInterface implements Screen {
             public void touchUp(InputEvent event, float x, float y, int pointer, int button){
                 // get modification type
                 String modificationType = modificationSelector.getSelected();
-                if (modificationType.equals("Base Consumption")){
-                    // get new agent value, call changeAgent()
-                    String agentID = agentField.getText();
-                    changeAgent(agentID);
+                String goodType = goodField.getText();
+                String value = modificationField.getText();
+
+                // type requirement lists
+                // all retroactive market setup modifications have to be doubles, all must be positive except for price
+                // elasticity of demand, which must be negative. None of them can be 0.
+                ArrayList<String> needGood = new ArrayList<>(Arrays.asList("Base Consumption", "Base Production",
+                        "Price Elasticity of Demand", "Price Elasticity of Supply", "Base Cost"));
+                ArrayList<String> mustBeDouble = new ArrayList<>(Arrays.asList("Base Consumption", "Base Production",
+                        "Price Elasticity of Demand", "Price Elasticity of Supply", "Base Cost"));
+
+                ArrayList<String> mustBePositive = new ArrayList<>(Arrays.asList("Base Consumption", "Base Production",
+                        "Price Elasticity of Supply", "Base Cost"));
+
+                ArrayList<String> mustBeNegative = new ArrayList<>(Collections.singletonList("Price Elasticity of Demand"));
+
+                // use pooled error checking based on modification type's presence in the above lists
+                boolean valueOK = true;
+                double valueAsDouble = 0;
+
+                // if a good is needed, make sure a valid good has been entered
+                if (needGood.contains(modificationType)){
+                    boolean goodFound = false;
+                    for (MarketInfo marketInfo : market.getMarketProfile()){
+                        if (marketInfo.getGood().equals(goodType)){
+                            goodFound = true;
+                            break;
+                        }
+                    }
+                    if (!goodFound){
+                        // if the good is invalid, set valueOK flag to false, print error message
+                        infoLabel.setText("Error:\nThe good name must match the name of a good currently in the market.");
+                        valueOK = false;
+                    }
+                }
+                // for all subsequent checks, do not perform them if the value has already failed another test.
+                // check double type cast validity
+                if (mustBeDouble.contains(modificationType) && valueOK){
+                    // if the type must be processed as a double, attempt to parse it
+                    try{
+                        valueAsDouble = Double.parseDouble(value);
+                    } catch (NumberFormatException e){
+                        infoLabel.setText("Error:\nFor this modification, the new value must be a number.");
+                        valueOK = false;
+                    }
+                }
+                // check if number must be positive
+                if (mustBePositive.contains(modificationType) && valueOK){
+                    if (valueAsDouble <= 0) {
+                        infoLabel.setText("Error:\nFor this modification, the new value must be positive.");
+                        valueOK = false;
+                    }
 
                 }
+                // check if value must be negative
+                if (mustBeNegative.contains(modificationType) && valueOK) {
+                    if (valueAsDouble >= 0) {
+                        infoLabel.setText("Error:\nFor this modification, the new value must be negative.");
+                        valueOK = false;
+                    }
+                }
+
+                // before handing off to modification functions, check that the value is ok
+                if (valueOK){
+                    // determine the modification type, call the corresponding function
+                    if (modificationType.equals("Base Consumption")){
+                        changeConsumption(goodType, valueAsDouble);
+                    }
+                    else if (modificationType.equals("Base Production")){
+                        changeProduction(goodType, valueAsDouble);
+                    }
+                    else if (modificationType.equals("Price Elasticity of Demand")){
+                        changePriceElasticityOfDemand(goodType, valueAsDouble);
+                    }
+                    else if (modificationType.equals("Price Elasticity of Supply")){
+                        changePriceElasticityOfSupply(goodType, valueAsDouble);
+                    }
+                    else if (modificationType.equals("Base Cost")){
+                        changeBaseCost(goodType, valueAsDouble);
+                    }
+                    // show confirmation message
+                    infoLabel.setText(modificationType + " successfully set to " + value + "." + "\n" +
+                            market.getMarketProfile());
+                }
+
             }
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -697,7 +729,7 @@ public class MarketInterface implements Screen {
         changeConsumptionButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                changeConsumption();
+                // changeConsumption();
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -750,26 +782,102 @@ public class MarketInterface implements Screen {
         }
     }
 
-    public void changeConsumption(){
-        // given information in good and cost text fields, attempt to change the corresponding cost in the market
-        boolean costOK = false;
-        double consumptionValue = 0;
-        String good = consumptionField.getText();
-        String cost = consumptionCostField.getText();
-
-        // make sure the user entered value is an integer
-        try{
-            consumptionValue = Double.parseDouble(cost);
-            costOK = true;
-        } catch (NumberFormatException e){
-            errorLabel.setText("Not a valid consumption!");
-        }
-        // if value is ok, set the matching consumption of each agent to the new consumption value
-        if (costOK){
-            for (Agent a : market.getAgents()){
-                a.getConsumption().get(good).setTickConsumption(consumptionValue);
+    private void changeConsumption(String good, double consumptionValue){
+        // change the value in the market profile
+        for (MarketInfo marketInfo : market.getMarketProfile()){
+            if (marketInfo.getGood().equals(good)){
+                marketInfo.setBaseConsumption(consumptionValue);
+                break;
             }
         }
+        // loop through each agent in the market, change the consumption of the specified good to its new value
+        for (Agent a : market.getAgents()){
+            a.getConsumption().get(good).setTickConsumption(consumptionValue);
+        }
+    }
+    private void changeProduction(String good, double productionValue){
+        // find the profession name associated with the good
+        String professionName = "";
+        for (MarketInfo marketInfo : market.getMarketProfile()){
+            if (marketInfo.getGood().equals(good)){
+                // get the profession name
+                professionName = marketInfo.getJobName();
+                // change the value in the market profile, so that agents that switch into this profession in the
+                // future will use the new value
+                marketInfo.setBaseProduction(productionValue);
+                break;
+            }
+        }
+
+        // loop through each agent in the market, change the base production of the specified good for all agents which
+        // produce this good in their profession
+        for (Agent a : market.getAgents()){
+            if (a.getProfession().getJob().equals(professionName)){
+                a.getProfession().setBaseProduction(productionValue);
+            }
+        }
+
+    }
+
+    private void changePriceElasticityOfDemand(String good, double elasticityOfDemandValue){
+        // change the value in the market profile
+        for (MarketInfo marketInfo : market.getMarketProfile()){
+            if (marketInfo.getGood().equals(good)){
+                marketInfo.setPriceElasticityDemand(elasticityOfDemandValue);
+                break;
+            }
+        }
+        // loop through each agent in the market, change the price elasticity of demand of the specified good
+        // to its new value
+        for (Agent a : market.getAgents()){
+            // find matching priority
+            for (Priority p : a.getPriorities()){
+                if (p.getGood().equals(good)){
+                    p.setPriceElasticity(elasticityOfDemandValue);
+                }
+            }
+        }
+    }
+
+    private void changePriceElasticityOfSupply(String good, double elasticityOfSupplyValue){
+        // find the profession name associated with the good
+        String professionName = "";
+        for (MarketInfo marketInfo : market.getMarketProfile()){
+            if (marketInfo.getGood().equals(good)){
+                // get the profession name
+                professionName = marketInfo.getJobName();
+                // change the value in the market profile, so that agents that switch into this profession in the
+                // future will use the new value
+                marketInfo.setPriceElasticitySupply(elasticityOfSupplyValue);
+                break;
+            }
+        }
+
+        // loop through each agent in the market, change the base production of the specified good for all agents which
+        // produce this good in their profession
+        for (Agent a : market.getAgents()){
+            if (a.getProfession().getJob().equals(professionName)){
+                a.getProfession().setPriceElasticityOfSupply(elasticityOfSupplyValue);
+            }
+        }
+
+    }
+
+    private void changeBaseCost(String good, double baseCostValue){
+        for (MarketInfo marketInfo : market.getMarketProfile()){
+            if (marketInfo.getGood().equals(good)){
+                // change the value in the market profile
+                marketInfo.setGoodCost(baseCostValue);
+                break;
+            }
+        }
+        // change corresponding base cost of the matching good entry in the market prices
+        for (Price p : market.getPrices()){
+            if (p.getGood().equals(good)){
+                p.setOriginalCost(baseCostValue);
+            }
+        }
+
     }
 
     public void changeAgent(String proposedAgentID){
@@ -1030,6 +1138,66 @@ public class MarketInterface implements Screen {
 
 
         return bottomRow;
+    }
+
+    @Override
+    public void show() {
+
+    }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
+        Gdx.input.setInputProcessor(stage);
+        // only run market if simulation is not paused
+        if (!isPaused){
+            frame += 1;
+            // use second fraction to determine how often to call run market
+            if (frame % ((int) (secondFraction * 60)) == 0) {
+                try {
+                    runMarket(market, frame);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // update the graphs, if any exist
+                for (ScrollingGraph graph : graphs.values()){
+                    graph.update(this);
+                    graph.graphLabels();
+                }
+
+            }
+
+        }
+        stage.act(delta);
+        stage.draw();
+
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void hide() {
+
+    }
+
+    @Override
+    public void dispose() {
+
     }
 
 }
