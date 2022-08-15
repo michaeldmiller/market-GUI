@@ -362,6 +362,36 @@ public class ScrollingGraph extends Actor {
     }
 
     public void update(MarketInterface marketInterface){
-        // to be overridden by subclasses
+        // to be overridden by subclasses with instructions to create the data being plotted
+
+        // Note: code below can be used to implement manual movement of all dots. A category for quantity labels,
+        // an "Other Component" which does move, will have to be created, and super() methods will have to be
+        // implemented in the subclasses. This enables full pause functionality, as since the update function won't
+        // be called, the graphs won't update their position. However, this method of movement appears to be much,
+        // much more performance intensive than the actor move method, to the point of drastic slowdown.
+        // This feature has been disabled, although it may be wise to revisit this in the future.
+
+        /*
+        // loop through dots
+        for (GraphPoint dot : this.getDots()){
+            // move position formula: calculate amount required to move the actor the width of the graph in 50
+            // seconds, then divide this again by the second fraction to determine the amount to move per second
+            dot.setPosition((float) (dot.getX() - this.getWidth() / (50 / marketInterface.secondFraction)), dot.getY());
+        }
+        // loop through labels
+        for (Label label : this.getLabels()){
+            // move position formula: calculate amount required to move the actor the width of the graph in 50
+            // seconds, then divide this again by the second fraction to determine the amount to move per second
+            label.setPosition((float) (label.getX() - this.getWidth() / (50 / marketInterface.secondFraction)), label.getY());
+        }
+        // loop through quantity labels
+        for (Label quantityLabel : this.getQuantityLabels()){
+            // move position formula: calculate amount required to move the actor the width of the graph in 50
+            // seconds, then divide this again by the second fraction to determine the amount to move per second
+            quantityLabel.setPosition((float) (quantityLabel.getX() - this.getWidth() / (50 / marketInterface.secondFraction)),
+                    quantityLabel.getY());
+        }
+
+         */
     }
 }

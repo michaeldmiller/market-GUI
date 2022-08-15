@@ -13,7 +13,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.Select;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import com.michaeldmiller.economicagents.*;
@@ -44,10 +43,7 @@ public class MarketInterface implements Screen {
     int frame;
     double secondFraction;
     int numberOfAgents;
-    ScrollingGraph priceGraph;
-    ScrollingGraph professionGraph;
     ScrollingGraph moneyGraph;
-    ScrollingGraph unmetNeedGraph;
     ScrollingGraph marketInventoryGraph;
     ScrollingGraph agentPropertyGraph;
     String agentID;
@@ -57,13 +53,14 @@ public class MarketInterface implements Screen {
     VerticalGroup marketGoods;
     Label infoLabel;
     HashMap<Integer, ScrollingGraph> graphs;
-    HashMap<String, String> graphTypesLookup;
     int numberOfGraphsSelectedByUser;
+    boolean isPaused;
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
                           ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
+        this.isPaused = true;
         this.graphs = new HashMap<>();
         numberOfGraphsSelectedByUser = 0;
         firstSkin = new Skin(Gdx.files.internal("skin/cloud-form/cloud-form-ui.json"));
@@ -104,10 +101,10 @@ public class MarketInterface implements Screen {
         masterTable.top().left();
         masterTable.padTop(10);
         // enable debugging for design purposes
-        masterTable.setDebug(true);
+        // masterTable.setDebug(true);
 
         // create labels
-        Label title = new Label("Market Creator", firstSkin);
+        Label title = new Label("Market Interface", firstSkin);
 
         // information label, wrap is true for multiple information lines
         infoLabel = new Label("------------Information------------", firstSkin);
@@ -129,13 +126,16 @@ public class MarketInterface implements Screen {
 
         // add the title and button to the first row
         Table titleInstructions = new Table();
-        titleInstructions.add(title).padLeft(50);
+        titleInstructions.add(title).padLeft(70);
         titleInstructions.add().expand();
-        titleInstructions.add(createInstructions());
+        titleInstructions.add(createInstructions()).width(125);
         masterTable.add(titleInstructions).align(Align.left).fill();
 
-
-        masterTable.add(menuButton).top().right().width(100);
+        // create table for pause and menu buttons
+        Table pauseMenu = new Table();
+        pauseMenu.add(createPauseResumeButton()).width(125);
+        pauseMenu.add(menuButton).top().right().width(125);
+        masterTable.add(pauseMenu);
         masterTable.row();
 
         // create vertical group, with one or two rows, each containing a horizontal group, for the graphs
@@ -144,27 +144,10 @@ public class MarketInterface implements Screen {
 
         HorizontalGroup graphRow1 = new HorizontalGroup();
 
-
-
-        // Texture testTexture = new Texture(Gdx.files.internal("test.png"));
-        // Drawable testDraw = new TextureRegionDrawable(new TextureRegion(testTexture));
-
-        // Image x = new Image(testDraw);
-        // x.setHeight(4000);
-        // x.setSize(1000, 400);
-        // graphRow1.addActor(x);
-
         marketGoods.setSize(2000, 400);
 
         marketGoods.addActor(graphRow1);
         marketGoods.expand();
-
-        // create labels
-        // marketGoods.addActor(createCategoryLabels());
-
-        // create scroll pane for goods
-        // set to fill whole rest of the screen (might be changed later), align to the top
-        // masterTable.add(marketGoods).expandY().top();
 
         // create invisible table to provide size suggestions to the graphs, which are positioned outside
         // the master table directly on the stage.
@@ -316,7 +299,6 @@ public class MarketInterface implements Screen {
 
     private void createGraph(int index, String graphType){
         // determine if graph already exists with that index
-
         if (graphs.containsKey(index)){
             // if it does, get it and delete it.
             ScrollingGraph oldGraph = graphs.get(index);
@@ -339,21 +321,21 @@ public class MarketInterface implements Screen {
         // one: (1210, 715)
 
         // determine x and y coordinates
-        int xCoordinate = 0;
+        int xCoordinate;
         if (index == 0 || index == 1){
             xCoordinate = 70;
         } else{
             xCoordinate = 710;
         }
-        int yCoordinate = 0;
+        int yCoordinate;
         if(index == 0 || index == 2){
             yCoordinate = 480;
         } else{
             yCoordinate = 100;
         }
         // determine width and height
-        int width = 0;
-        int height = 0;
+        int width;
+        int height;
         // use number of possible graphs selected, not the current graph number
         if (numberOfGraphsSelectedByUser == 1){
             width = 1210;
@@ -362,11 +344,19 @@ public class MarketInterface implements Screen {
         } else if (numberOfGraphsSelectedByUser == 2){
             width = 1210;
             height = 335;
-        } else{
+        } else if (numberOfGraphsSelectedByUser == 3){
+            // if it is graph 2, take up whole screen length wise, otherwise take up half the screen
+            if (index == 1){
+                width = 1210;
+            }
+            else {
+                width = 570;
+            }
+            height = 335;
+        } else {
             width = 570;
             height = 335;
         }
-
 
         // create the appropriate graph
         // list of graph types
@@ -431,17 +421,6 @@ public class MarketInterface implements Screen {
     }
 
 
-    private void deleteGraph(int index) {
-        // pure deletion function for a graph, deletes the graph at the specified index, if it exists.
-        if (graphs.containsKey(index)) {
-            ScrollingGraph oldGraph = graphs.get(index);
-            // delete the graph components, and then remove the graph from the graphs list
-            oldGraph.deleteAll(oldGraph.getDots(), oldGraph.getLabels(), oldGraph.getOtherComponents());
-            graphs.remove(index);
-        }
-    }
-
-
     @Override
     public void show() {
 
@@ -451,23 +430,26 @@ public class MarketInterface implements Screen {
     public void render(float delta) {
         ScreenUtils.clear(0.9f, 0.9f, 0.9f, 1);
         Gdx.input.setInputProcessor(stage);
-        frame += 1;
-        // use second fraction to determine how often to call run market
-        if (frame % ((int) (secondFraction * 60)) == 0) {
-            try {
-                runMarket(market, frame);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        // only run market if simulation is not paused
+        if (!isPaused){
+            frame += 1;
+            // use second fraction to determine how often to call run market
+            if (frame % ((int) (secondFraction * 60)) == 0) {
+                try {
+                    runMarket(market, frame);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
 
-            // update the graphs, if any exist
-            for (ScrollingGraph graph : graphs.values()){
-                graph.update(this);
-                graph.graphLabels();
+                // update the graphs, if any exist
+                for (ScrollingGraph graph : graphs.values()){
+                    graph.update(this);
+                    graph.graphLabels();
+                }
+
             }
 
         }
-
         stage.act(delta);
         stage.draw();
 
@@ -497,6 +479,33 @@ public class MarketInterface implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    private Button createPauseResumeButton(){
+        // given the current state, create a button with the opposite text, i.e. given a resume button, create
+        // a pause button, and create a resume button given a pause button
+        Button returnButton = new TextButton("Resume", firstSkin);
+        // set the button to flip the boolean paused value when pressed
+        returnButton.addListener(new InputListener(){
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button){
+                isPaused = !isPaused;
+                // reset text, if text is pause, set to resume, and vice versa
+                Actor buttonActor = event.getListenerActor();
+                TextButton textButton = (TextButton) buttonActor;
+                String buttonText = String.valueOf(textButton.getText());
+                if (buttonText.equals("Resume")){
+                    textButton.setText("Pause");
+                } else {
+                    textButton.setText("Resume");
+                }
+            }
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                return true;
+            }
+        });
+        return returnButton;
     }
 
     // UI Instantiation
@@ -693,7 +702,6 @@ public class MarketInterface implements Screen {
         }
     }
 
-
     // graph update functions
     public void updateMoneyGraph(){
         // update function for the money graph, gets agent money data from market and then turns it into coordinates
@@ -739,10 +747,7 @@ public class MarketInterface implements Screen {
     }
 
 
-    public Table createInstructions(){
-        // create output table
-        Table instructionsTable = new Table();
-
+    public Button createInstructions(){
         // create instruction button
         Button instructionsButton = new TextButton(" Instructions ", firstSkin);
         instructionsButton.addListener(new InputListener(){
@@ -769,9 +774,8 @@ public class MarketInterface implements Screen {
                 return true;
             }
         });
-        instructionsTable.add(instructionsButton);
 
-        return instructionsTable;
+        return instructionsButton;
     }
 
     public VerticalGroup createBottomRow(){
