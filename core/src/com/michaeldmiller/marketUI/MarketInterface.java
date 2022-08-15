@@ -31,7 +31,6 @@ public class MarketInterface implements Screen {
     Market market;
     ArrayList<MarketInfo> currentMarketProfile;
     HashMap<String, Color> colorLookup;
-    Label prices;
     Label moreInfo;
     Label errorLabel;
     TextField goodField;
@@ -55,6 +54,9 @@ public class MarketInterface implements Screen {
     HashMap<Integer, ScrollingGraph> graphs;
     int numberOfGraphsSelectedByUser;
     boolean isPaused;
+    SelectBox<String> modificationSelector;
+    TextField agentSelectorField;
+    TextField modificationField;
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
@@ -182,7 +184,7 @@ public class MarketInterface implements Screen {
         graphChoices.add(4);
         numberOfGraphsSelector.setItems(graphChoices);
         numberOfGraphsSelectionTable.add(numberOfGraphsSelector);
-        informationPanel.add(numberOfGraphsSelectionTable);
+        informationPanel.add(numberOfGraphsSelectionTable).padTop(5);
         informationPanel.row();
 
         // type label
@@ -279,10 +281,33 @@ public class MarketInterface implements Screen {
 
         // info box, add information label
         // create scroll pane
-        infoLabel = new Label("------------Information------------", firstSkin);
-        infoLabel.setWrap(true);
+        infoLabel.setAlignment(Align.top, Align.left);
         final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
         informationPanel.add(informationScrollPane).width(250);
+        informationPanel.row();
+
+        // add modifications
+        VerticalGroup modificationsGroup = new VerticalGroup();
+        // add modification selector
+        modificationSelector = new SelectBox<>(firstSkin);
+        Array<String> modificationChoices = new Array<>();
+        modificationChoices.add("Base Consumption");
+        modificationSelector.setItems(modificationChoices);
+        modificationsGroup.addActor(modificationSelector);
+        // add agent entry box
+        goodField = new TextField("Good", firstSkin);
+        modificationsGroup.addActor(goodField);
+        // add modification value entry box
+        modificationField = new TextField("New Value", firstSkin);
+        modificationsGroup.addActor(modificationField);
+        // create modification button
+        modificationsGroup.addActor(createModifyButton());
+
+
+        informationPanel.add(modificationsGroup).padTop(5);
+        informationPanel.row();
+
+
         masterTable.add(informationPanel).width(250).center().top();
 
         // add bottom row
@@ -291,7 +316,21 @@ public class MarketInterface implements Screen {
         // masterTable.add(createBottomRow()).align(Align.left).top().padLeft(10);
         // center align
         masterTable.add(createBottomRow()).top();
-        masterTable.add();
+
+        // create change agent area
+        Table changeAgentTable = new Table();
+        Label changeAgentLabel = new Label("Modify Agent ID", firstSkin);
+        changeAgentTable.add(changeAgentLabel);
+        changeAgentTable.row();
+        // modification field and button
+        Table changeAgentModificationTable = new Table();
+        agentField = new TextField("Agent ID", firstSkin);
+        Button changeAgentButton = createChangeAgentButton();
+        changeAgentModificationTable.add(agentField).padRight(10);
+        changeAgentModificationTable.add(changeAgentButton);
+        changeAgentTable.add(changeAgentModificationTable);
+
+        masterTable.add(changeAgentTable);
 
         instantiateMarket();
 
@@ -508,6 +547,51 @@ public class MarketInterface implements Screen {
         return returnButton;
     }
 
+    private Button createChangeAgentButton(){
+        Button changeAgent = new TextButton("Set", firstSkin);
+        changeAgent.addListener(new InputListener(){
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button){
+                // attempt to modify the agent
+                String agentID = agentField.getText();
+                changeAgent(agentID);
+
+            }
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                return true;
+            }
+        });
+        return changeAgent;
+
+    }
+
+    private Button createModifyButton(){
+        // create the modification button, which takes the modification category from the selection box, and the
+        // new values from the appropriate user entry points (agent text entry field and/or main text entry field)
+        // then determines which modification function to call and calls it
+
+        Button modifyButton = new TextButton("Modify", firstSkin);
+        modifyButton.addListener(new InputListener(){
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button){
+                // get modification type
+                String modificationType = modificationSelector.getSelected();
+                if (modificationType.equals("Base Consumption")){
+                    // get new agent value, call changeAgent()
+                    String agentID = agentField.getText();
+                    changeAgent(agentID);
+
+                }
+            }
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                return true;
+            }
+        });
+        return modifyButton;
+    }
+
     // UI Instantiation
     public void addButtons(){
         Button menuButton = new TextButton("Menu", firstSkin);
@@ -588,7 +672,7 @@ public class MarketInterface implements Screen {
         changeAgentButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                changeAgent();
+                // changeAgent();
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -688,18 +772,44 @@ public class MarketInterface implements Screen {
         }
     }
 
-    public void changeAgent(){
-        // given information in good and cost text fields, attempt to change the corresponding cost in the market
-        String proposedAgentID = agentField.getText();
+    public void changeAgent(String proposedAgentID){
+        // check to see if the new value is different from the old one
+        if (!proposedAgentID.equals(agentID)){
+            // given a proposed agentID, check the market for a match, if one exists, reassign the agentID field
+            // for the market (i.e. the agent selected for display). If no match exists, display an error text in the
+            // info label, otherwise, display a confirmation message.
 
-        // if value is ok, check goods for match and assign cost
-        for (Agent a : market.getAgents()){
-            if (a.getId().equals(proposedAgentID)){
-                agentID = proposedAgentID;
-                agentPropertyGraph.setTitle(proposedAgentID);
-                agentPropertyGraph.updateGraphTitle();
+            boolean matchFound = false;
+
+            for (Agent a : market.getAgents()){
+                if (a.getId().equals(proposedAgentID)){
+                    agentID = proposedAgentID;
+                    matchFound = true;
+                    // tricky part: find any graphs which mention the agent and recreate them
+                    // separating into two loops to avoid error
+                    ArrayList<Integer> graphsNeedingUpdate = new ArrayList<>();
+                    for (Map.Entry<Integer, ScrollingGraph> graphEntry : graphs.entrySet()){
+                        if (graphEntry.getValue() instanceof AgentPropertyGraph){
+                            graphsNeedingUpdate.add(graphEntry.getKey());
+                        }
+                    }
+                    for (Integer i : graphsNeedingUpdate){
+                        createGraph(i, "Agent");
+                    }
+                    break;
+                }
             }
+            if (!matchFound){
+                infoLabel.setText("That is not a valid agent ID. Please try again.");
+            } else{
+                infoLabel.setText("Agent ID modified to: " + agentID + ".");
+            }
+
+        } else{
+            infoLabel.setText("That is already the current agent ID.");
         }
+
+
     }
 
     // graph update functions
