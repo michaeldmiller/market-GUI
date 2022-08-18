@@ -45,10 +45,10 @@ public class Price {
     }
 
     public String toString() {
-        return ("\n" + this.getGood() + ", " +
-                "Cost: " + (Math.round(this.getCost()))
-                // + ", " + "Equilibrium Cost: " + this.getEquilibriumCost() + ", " +
-                // "Original Cost: " + this.getOriginalCost()
+        return ("\n\n" + this.getGood() + ": " +
+                String.format("Price: %.2f", this.getCost()) + ", " +
+                String.format("Equilibrium Price: %.2f", this.getEquilibriumCost()) + ", " +
+                String.format("Original Price: %.2f", this.getOriginalCost())
         );
     }
 }

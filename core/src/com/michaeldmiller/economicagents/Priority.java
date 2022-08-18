@@ -79,12 +79,12 @@ public class Priority {
     }
 
     public String toString() {
-        return ("\n" + this.getGood() + ": " +
-                "base weight: " + this.getBaseWeight() + ", " +
-                "relative need: " + this.getRelativeNeed() + ", " +
-                "modifier: " + this.getModifier() + ", " +
-                "price elasticity: " + this.getPriceElasticity() + ", " +
-                "original price elasticity: " + this.getOriginalPriceElasticity() + ", " +
-                "final weight: " + this.getWeight() + ".");
+        return ("\n\n" + this.getGood() + ": " +
+                String.format("base weight: %.2f", this.getBaseWeight()) + ", " +
+                String.format("relative need: %.2f", this.getRelativeNeed()) + ", " +
+                String.format("modifier: %.2f", this.getModifier()) + ", " +
+                String.format("price elasticity: %.2f", this.getPriceElasticity()) + ", " +
+                String.format("original price elasticity: %.2f", this.getOriginalPriceElasticity()) + ", " +
+                String.format("final weight: %.2f", this.getWeight()) + ".");
     }
 }

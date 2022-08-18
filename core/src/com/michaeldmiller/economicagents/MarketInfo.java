@@ -82,15 +82,15 @@ public class MarketInfo {
     }
 
     public String toString() {
-        return ("Good: " + this.getGood() + ", " +
-                "Base Consumption: " + this.getBaseConsumption() + ", " +
-                "Base Production: " + this.getBaseProduction() + ", " +
-                "Demand Elasticity: " + this.getPriceElasticityDemand() + ", " +
-                "Supply Elasticity: " + this.getPriceElasticitySupply() + ", " +
-                "Good Cost: " + this.getGoodCost() + ", " +
-                "Base Weight: " + this.getPriorityBaseWeight() + ", " +
-                "Job Name: " + this.getJobName() + ", " +
-                "Job Chance: " + this.getJobChance() + ", ");
+        return ("\n\n" + this.getGood() + ": " +
+                String.format("Base Consumption: %.2f", this.getBaseConsumption()) + ", " +
+                String.format("Base Production: %.2f", this.getBaseProduction()) + ", " +
+                String.format("Demand Elasticity: %.2f", this.getPriceElasticityDemand()) + ", " +
+                String.format("Supply Elasticity: %.2f", this.getPriceElasticitySupply()) + ", " +
+                String.format("Good Cost: %.2f", this.getGoodCost()) + ", " +
+                String.format("Base Weight: %.2f", this.getPriorityBaseWeight()) + ", " +
+                String.format("Job Name: %s", this.getJobName()) + ", " +
+                String.format("Job Chance: %.2f", this.getJobChance()));
     }
 
 

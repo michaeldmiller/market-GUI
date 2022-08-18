@@ -179,7 +179,7 @@ public class MarketInterface implements Screen {
         // create number of graphs selector
         numberOfGraphsSelector = createNumberOfGraphsSelector();
         numberOfGraphsSelectionTable.add(numberOfGraphsSelector);
-        informationPanel.add(numberOfGraphsSelectionTable).padTop(5);
+        informationPanel.add(numberOfGraphsSelectionTable).padTop(5).top();
         informationPanel.row();
 
         // type label
@@ -196,7 +196,7 @@ public class MarketInterface implements Screen {
         // create scroll pane
         infoLabel.setAlignment(Align.top, Align.left);
         final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
-        informationPanel.add(informationScrollPane).width(250);
+        informationPanel.add(informationScrollPane).width(250).expandY().top();
         informationPanel.row();
 
         // add modifications
@@ -221,18 +221,18 @@ public class MarketInterface implements Screen {
         modificationsGroup.addActor(createModifyButton());
 
 
-        informationPanel.add(modificationsGroup).padTop(5);
+        informationPanel.add(modificationsGroup).padTop(5).padBottom(42);
         informationPanel.row();
 
 
-        masterTable.add(informationPanel).width(250).center().top();
+        masterTable.add(informationPanel).fill().center().top();
 
         // add bottom row
         masterTable.row();
         // left align
         // masterTable.add(createBottomRow()).align(Align.left).top().padLeft(10);
         // center align
-        masterTable.add(createBottomRow()).top();
+        masterTable.add(createDisplayPanel()).top();
 
         // create change agent area
         Table changeAgentTable = new Table();
@@ -317,7 +317,7 @@ public class MarketInterface implements Screen {
 
         // create the appropriate graph
         // list of graph types
-        if (graphType.equals("Price")){
+        if (graphType.equals("Prices")){
             PriceGraph priceGraph = new PriceGraph(xCoordinate, yCoordinate, width, height,
                     marketUI.worldWidth, marketUI.worldHeight, scale, "Prices",
                     new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
@@ -459,7 +459,7 @@ public class MarketInterface implements Screen {
                         final SelectBox<String> graphTypeSelector = new SelectBox<>(firstSkin);
                         Array<String> graphTypes = new Array<>();
                         graphTypes.add("");
-                        graphTypes.add("Price");
+                        graphTypes.add("Prices");
                         graphTypes.add("Producers");
                         graphTypes.add("Agent");
                         graphTypes.add("Unmet Needs");
@@ -665,85 +665,6 @@ public class MarketInterface implements Screen {
 
     }
 
-    public void makeAdjustmentFields(){
-        goodField = new TextField("Good", firstSkin);
-        goodField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (2.5 * marketUI.standardButtonHeight));
-        stage.addActor(goodField);
-        costField = new TextField("New Cost", firstSkin);
-        costField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - 3 * marketUI.standardButtonHeight);
-        stage.addActor(costField);
-
-        Button changeCostButton = new TextButton("Update Cost", firstSkin);
-        changeCostButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - 4* marketUI.standardButtonHeight);
-        changeCostButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        changeCostButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                changePrice();
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(changeCostButton);
-
-        // change agent (requires agent property graph)
-        agentField = new TextField("New Agent ID:", firstSkin);
-        agentField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (5 * marketUI.standardButtonHeight));
-        stage.addActor(agentField);
-
-        Button changeAgentButton = new TextButton("Update Agent", firstSkin);
-        changeAgentButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (6 * marketUI.standardButtonHeight));
-        changeAgentButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        changeAgentButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // changeAgent();
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(changeAgentButton);
-
-        consumptionField = new TextField("Good", firstSkin);
-        consumptionField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (7.5 * marketUI.standardButtonHeight));
-        stage.addActor(consumptionField);
-        consumptionCostField = new TextField("New Consumption", firstSkin);
-        consumptionCostField.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - 8 * marketUI.standardButtonHeight);
-        stage.addActor(consumptionCostField);
-
-        Button changeConsumptionButton = new TextButton("Update Consumption", firstSkin);
-        changeConsumptionButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - 9* marketUI.standardButtonHeight);
-        changeConsumptionButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        changeConsumptionButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // changeConsumption();
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(changeConsumptionButton);
-
-        errorLabel = new Label ("Errors Here", firstSkin);
-        errorLabel.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - (int) (10 * marketUI.standardButtonHeight));
-        stage.addActor(errorLabel);
-
-    }
     // Market instantiation
     public void instantiateMarket(){
         // create agents
@@ -795,6 +716,7 @@ public class MarketInterface implements Screen {
             a.getConsumption().get(good).setTickConsumption(consumptionValue);
         }
     }
+
     private void changeProduction(String good, double productionValue){
         // find the profession name associated with the good
         String professionName = "";
@@ -996,135 +918,252 @@ public class MarketInterface implements Screen {
         return instructionsButton;
     }
 
-    public VerticalGroup createBottomRow(){
-        // create output group
-        VerticalGroup bottomRow = new VerticalGroup();
-        // create the two tables, one for the labels and info buttons, one for the actual
-        Table bottomRowLabels = new Table();
-        Table bottomRowInteractive = new Table();
-        bottomRow.addActor(bottomRowLabels);
-        bottomRow.addActor(bottomRowInteractive);
+    public Table createDisplayPanel(){
+        // create output table
+        Table displayPanel = new Table();
+        // two rows, many columns. Top row for Label and info button, bottom for button, or selector and button
 
-        // create field for number of Agents, prefilled to 2000
-        Label numberOfAgents = new Label ("Number of Agents", firstSkin);
-        bottomRowLabels.add(numberOfAgents).padLeft(35).padRight(5);
+        Label displayOptions = new Label("Display", firstSkin);
+        displayPanel.add(displayOptions).bottom();
+
+        // display prices
+        Table priceDisplayTable = new Table();
+        Label displayCurrentPrices = new Label("Price Information", firstSkin);
+        priceDisplayTable.add(displayCurrentPrices).padLeft(20).padRight(5);
         // info button
-        ImageButton numberOfAgentsButton = new ImageButton(infoIcon, infoIconClicked);
-        numberOfAgentsButton.addListener(new InputListener(){
+        ImageButton pricesInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        pricesInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Number of Agents:\n" + "This value is the number of agents present in the " +
-                        "market simulation. A larger number of agents increases the detail of the simulation, at " +
-                        "the cost of performance. Only a hundred or so are necessary for a fairly detailed " +
-                        "simulation, though at least a thousand is better. At the moment, no multithreading " +
-                        "is implemented, on an i7-8700k utilizing a single core, 2000 agents nears the upper " +
-                        "performance limit.");
+                infoLabel.setText("Price Information:\n" + "This displays the full details of the prices " +
+                        "currently experienced in the market, including the equilibrium and original " +
+                        "cost values used in calculations.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
                 return true;
             }
         });
-        bottomRowLabels.add(numberOfAgentsButton).padRight(35);
+        priceDisplayTable.add(pricesInfoButton).padRight(15);
+        displayPanel.add(priceDisplayTable);
 
-        TextField numberOfAgentsField = new TextField("2000", firstSkin);
-        bottomRowInteractive.add(numberOfAgentsField).padRight(50);
-
-        // create first preset button
-        Label preset1Label = new Label("Preset 1", firstSkin);
-        bottomRowLabels.add(preset1Label).padLeft(20).padRight(5);
+        // display number of producers
+        Table totalProducersDisplayTable = new Table();
+        Label displayTotalProducers = new Label("Total Producers", firstSkin);
+        totalProducersDisplayTable.add(displayTotalProducers);
         // info button
-        ImageButton preset1InfoButton = new ImageButton(infoIcon, infoIconClicked);
-        preset1InfoButton.addListener(new InputListener(){
+        ImageButton totalProducersInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        totalProducersInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Preset 1:\n" + "The first preset. Using a preset will start the simulation using " +
-                        "one of a few predefined markets. Preset 1 is a balanced market of five goods: Fish, " +
-                        "Lumber, Grain, Metal, and Brick, each of which is functionally identical with one another; " +
-                        "i.e. they are all produced and consumed at the same rate and prioritized equally. There is a " +
-                        "small surplus in the market, and production is distributed proportionally on initialization " +
-                        "so that the market starts in a stable equilibrium. It is a great entry point, to get used to " +
-                        "how the simulation works and get used to the different display and control options that " +
-                        "are available. It is also an excellent platform to demonstrate the effects of modifying " +
-                        "various market attributes with the modification tools in the main interface. Note: " +
-                        "to respond better to differing performance requirements, presets still use a " +
-                        "custom number of agents, as specified in the box to the left of the presets.");
+                infoLabel.setText("Total Producers:\n" + "This displays the total numbers of producers for each " +
+                        "type of good.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
                 return true;
             }
         });
-        bottomRowLabels.add(preset1InfoButton).padRight(30);
+        totalProducersDisplayTable.add(totalProducersInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(totalProducersDisplayTable);
 
-        Button preset1CreateButton = new TextButton("Use Preset", firstSkin);
-        preset1CreateButton.addListener(new InputListener(){
+
+        // display current agent
+        Table currentAgentDisplayTable = new Table();
+        Label displayCurrentAgent = new Label("Current Agent", firstSkin);
+        currentAgentDisplayTable.add(displayCurrentAgent);
+        // info button
+        ImageButton currentAgentInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        currentAgentInfoButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // preset values
-                int numberOfGoods = 6;
-                double surplusValue = 0.01;
-                MarketInfo fish = new MarketInfo("Fish", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                        1, -1, 0,10, 1,
-                        "Fisherman", 1.0 / numberOfGoods);
-                MarketInfo lumber = new MarketInfo("Lumber", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                        1,-1, 0, 10, 1,
-                        "Lumberjack", 1.0 / numberOfGoods);
-                MarketInfo grain = new MarketInfo("Grain", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                        1, -1, 0, 10, 1,
-                        "Farmer", 1.0 / numberOfGoods);
-                MarketInfo metal = new MarketInfo("Metal", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                        1, -1, 0, 10, 1,
-                        "Blacksmith", 1.0 / numberOfGoods);
-                MarketInfo brick = new MarketInfo("Brick", (1.0 / numberOfGoods) - (surplusValue / numberOfGoods),
-                        1, -1, 0, 10, 1,
-                        "Mason", 1.0 / numberOfGoods);
-                ArrayList<MarketInfo> preset1MarketProfile = new ArrayList<MarketInfo>();
+                // change information box text to description
+                infoLabel.setText("Current Agent Information:\n" + "This displays the properties of the current " +
+                        "agent. To view a different agent, change the current active agent using the change agent " +
+                        "button in the lower right.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        currentAgentDisplayTable.add(currentAgentInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(currentAgentDisplayTable);
 
-                preset1MarketProfile.add(fish);
-                preset1MarketProfile.add(lumber);
-                preset1MarketProfile.add(grain);
-                preset1MarketProfile.add(metal);
-                preset1MarketProfile.add(brick);
+        // display total unmet needs
+        Table totalUnmetNeedsDisplayTable = new Table();
+        Label displayTotalUnmetNeeds = new Label("Unmet Needs", firstSkin);
+        totalUnmetNeedsDisplayTable.add(displayTotalUnmetNeeds);
+        // info button
+        ImageButton unmetNeedsInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        unmetNeedsInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Total Unmet Needs:\n" + "This displays the total amount of unmet needs for " +
+                        "each good held by the agents in the market. Through its effects on individual price " +
+                        "elasticities and the market demand curve, this is a key component in determining the " +
+                        "price of each good.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        totalUnmetNeedsDisplayTable.add(unmetNeedsInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(totalUnmetNeedsDisplayTable);
 
-                // overwrite current market profile
-                currentMarketProfile = preset1MarketProfile;
+        // display total priority weights
+        Table totalPriorityWeightsTable = new Table();
+        Label displayTotalPriorityWeights = new Label("Priority Weights", firstSkin);
+        totalPriorityWeightsTable.add(displayTotalPriorityWeights);
+        // info button
+        ImageButton priorityWeightsInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        priorityWeightsInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Total Priority Weights:\n" + "This displays the sum of all of the weight values " +
+                        "assigned to each good by each agent in this tick, when the agents were determining which " +
+                        "good they would try to buy. These weights informed a weighted choice system that picked" +
+                        "the chosen good (i.e. if a the weight was 80 for Good A and 20 for Good B, and Goods A " +
+                        "and B were the only choices, the agent would have an 80% chance of buying Good A and a 20%" +
+                        "chance of buying Good B.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        totalPriorityWeightsTable.add(priorityWeightsInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(totalPriorityWeightsTable);
 
-                StringBuilder errorText = new StringBuilder();
-                errorText.append("Error(s):\n");
-                // get the number of agents
-                VerticalGroup bottomRow = (VerticalGroup) masterTable.getChild(4);
-                Table interactiveBottomRow = (Table) bottomRow.getChild(1);
-                TextField numberOfAgentsField = (TextField) interactiveBottomRow.getChild(0);
-                int numberOfAgents = 0;
-                try{
-                    numberOfAgents = Integer.parseInt(numberOfAgentsField.getText());
-                    if (numberOfAgents < 0){
-                        throw new IllegalArgumentException();
+
+        // display market profile information
+        Table marketProfileDisplayTable = new Table();
+        Label displayMarketProfileInfo = new Label("Market Profile", firstSkin);
+        marketProfileDisplayTable.add(displayMarketProfileInfo);
+        // info button
+        ImageButton marketProfileInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        marketProfileInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Market Profile:\n" + "This displays a list of the basic information about " +
+                        "the goods used currently in the market, particularly things like their base costs, " +
+                        "elasticities, as well as job and profession names. It does not display the entire market, " +
+                        "as this is a huge volume of text which causes a great deal of lag in the simulation.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        marketProfileDisplayTable.add(marketProfileInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(marketProfileDisplayTable);
+
+        // display market goods information
+        Table marketPropertiesDisplayTable = new Table();
+        Label displayMarketPropertyInfo = new Label("Market Properties", firstSkin);
+        marketPropertiesDisplayTable.add(displayMarketPropertyInfo);
+        // info button
+        ImageButton marketPropertiesInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        marketPropertiesInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Market Properties:\n" + "This displays the current inventory, job output combinations," +
+                        "and prices currently in the market. It does not display the entire market, as this is a " +
+                        "huge volume of text which causes a great deal of lag in the simulation.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        marketPropertiesDisplayTable.add(marketPropertiesInfoButton).padLeft(5).padRight(15);
+        displayPanel.add(marketPropertiesDisplayTable);
+        // consumptions sum, priorities sum
+        // order: prices, producers sum, current agent, unmet need sum, consumptions sum, priorities sum, market goods, market properties.
+
+        // advance to button row
+        displayPanel.row();
+        // add lower part of panel label
+        Label displayPanelLowerLabel = new Label("Panel", firstSkin);
+        displayPanel.add(displayPanelLowerLabel).top();
+
+        // prices display button
+        TextButton pricesDisplayButton = new TextButton("Display", firstSkin);
+        pricesDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find prices and change information box text to description
+                infoLabel.setText("Market Prices: " + market.getPrices());
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(pricesDisplayButton);
+
+        // total producers display button
+        TextButton totalProducersDisplayButton = new TextButton("Display", firstSkin);
+        totalProducersDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find total number of producers and change information box text to description
+                // make hash map of total producers
+                HashMap<String, Integer> jobsTotal = new HashMap<String, Integer>();
+                for (Agent a : market.getAgents()){
+                    if (!jobsTotal.containsKey(a.getProfession().getJob())){
+                        jobsTotal.put(a.getProfession().getJob(), 1);
                     }
-                } catch(NumberFormatException e){
-                    errorText.append("The number of agents must be a number.\n");
-                } catch(IllegalArgumentException e){
-                    errorText.append("The number of agents must be positive.\n");
+                    else {
+                        String key = a.getProfession().getJob();
+                        jobsTotal.put(key, jobsTotal.get(key) + 1);
+                    }
                 }
+                StringBuilder outputString = new StringBuilder();
+                // pair the producers with goods and assemble into output string
+                for (Map.Entry<String, Integer> jobQuantity : jobsTotal.entrySet()){
+                    for (JobOutput jobLookup : market.getJobOutputs()){
+                        if (jobLookup.getJob().equals(jobQuantity.getKey())){
+                            // add leading new line
+                            outputString.append("\n\n");
+                            // use correct plural
+                            if (jobQuantity.getValue() > 1){
+                                outputString.append(String.format("%s: %d %ss", jobLookup.getGood(), jobQuantity.getValue(), jobQuantity.getKey()));
+                            } else{
+                                outputString.append(String.format("%s: %d %s", jobLookup.getGood(), jobQuantity.getValue(), jobQuantity.getKey()));
+                            }
 
-                // if there were no errors (i.e. the error text is still its initial value), create the market,
-                // otherwise, set the information box to show the encountered error
-                if(errorText.toString().equals("Error(s):\n")){
-                    // create a new main interface screen using the new market profile
-                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, currentMarketProfile);
-                    // if a market did not exist before, refresh the main menu to include an enabled resume button
-                    if (!marketUI.marketExists){
-                        marketUI.marketExists = true;
-                        marketUI.mainMenu = new MainMenu(marketUI);
+                        }
                     }
-                    // set the current screen to the main interface
-                    marketUI.setScreen(marketUI.marketInterface);
-                } else{
-                    // otherwise, display the error text in the info box
-                    infoLabel.setText(errorText.toString());
+                }
+                infoLabel.setText("Total Producers: " + outputString);
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(totalProducersDisplayButton).padRight(10);
+
+        // current agent display button
+        TextButton currentAgentDisplayButton = new TextButton("Display", firstSkin);
+        currentAgentDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find agent and change information box text to description
+                for (Agent agent : market.getAgents()){
+                    if (agent.getId().equals(agentID)){
+                        infoLabel.setText("Agent " + agentID + ": " + agent);
+                    }
                 }
 
             }
@@ -1133,11 +1172,137 @@ public class MarketInterface implements Screen {
                 return true;
             }
         });
-        bottomRowInteractive.add(preset1CreateButton);
+        displayPanel.add(currentAgentDisplayButton).padRight(10);
+
+        // unmet needs display button
+        TextButton unmetNeedsDisplayButton = new TextButton("Display", firstSkin);
+        unmetNeedsDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find total number of unmet needs and change information box text to description
+                // make hash map of total unmet needs
+                HashMap<String, Double> unmetNeedsTotals = new HashMap<>();
+                for (Agent a : market.getAgents()){
+                    for (Map.Entry<String, Consumption> consumptionProfile : a.getConsumption().entrySet()){
+                        if (!unmetNeedsTotals.containsKey(consumptionProfile.getKey())){
+                            unmetNeedsTotals.put(consumptionProfile.getKey(), consumptionProfile.getValue().getTotalUnmetNeed());
+                        }
+                        else {
+                            unmetNeedsTotals.put(consumptionProfile.getKey(),
+                                    unmetNeedsTotals.get(consumptionProfile.getKey()) + consumptionProfile.getValue().getTotalUnmetNeed());
+                        }
+                    }
+                }
+                // assemble into output string
+                StringBuilder outputString = new StringBuilder();
+                for (Map.Entry<String, Double> unmetNeedsTotal : unmetNeedsTotals.entrySet()){
+                    // add leading new line
+                    outputString.append("\n\n");
+                    // append good information
+                    outputString.append(String.format("%s: %.2f", unmetNeedsTotal.getKey(), unmetNeedsTotal.getValue()));
+
+                }
+                infoLabel.setText("Total Unmet Needs: " + outputString);
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(unmetNeedsDisplayButton).padRight(15);
+
+        // priority weight sum display button
+        TextButton priorityWeightDisplayButton = new TextButton("Display", firstSkin);
+        priorityWeightDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find total amount of priority weights and change information box text to description
+                // make hash map of total priority weights
+                HashMap<String, Double> priorityWeightTotals = new HashMap<>();
+
+                for (Agent a : market.getAgents()){
+                    for (Priority priority : a.getPriorities()){
+                        if (!priorityWeightTotals.containsKey(priority.getGood())){
+                            priorityWeightTotals.put(priority.getGood(), priority.getWeight());
+                        }
+                        else {
+                            priorityWeightTotals.put(priority.getGood(),
+                                    priorityWeightTotals.get(priority.getGood()) + priority.getWeight());
+                        }
+                    }
+                }
+                // assemble into output string
+                StringBuilder outputString = new StringBuilder();
+                for (Map.Entry<String, Double> priorityWeight : priorityWeightTotals.entrySet()){
+                    // add leading new line
+                    outputString.append("\n\n");
+                    // append good information
+                    outputString.append(String.format("%s: %.2f", priorityWeight.getKey(), priorityWeight.getValue()));
+
+                }
+                infoLabel.setText("Total Priority Weights: " + outputString);
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(priorityWeightDisplayButton).padRight(20);
+
+        // market profile display button
+        TextButton marketProfileDisplayButton = new TextButton("Display", firstSkin);
+        marketProfileDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // find market profile and change information box text
+
+                infoLabel.setText("Market Profile: " + market.getMarketProfile());
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(marketProfileDisplayButton).padRight(20);
+
+        // market profile display button
+        TextButton marketPropertiesDisplayButton = new TextButton("Display", firstSkin);
+        marketPropertiesDisplayButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // get list of agent IDs
+                StringBuilder agentIDs = new StringBuilder();
+                // use standard for loop to have access to index to prevent last comma from being added
+                for (int i = 0; i < market.getAgents().size(); i++){
+                    agentIDs.append(market.getAgents().get(i).getId());
+                    if (i < market.getAgents().size() - 1){
+                        agentIDs.append(", ");
+                    } else{
+                        agentIDs.append(".");
+                    }
+                }
+
+                // find market properties and change information box text
+                infoLabel.setText("Market Properties: " +
+                        "\nThis market's inventory is: " + market.getInventory() + "\n" +
+                        "\nIt permits the following job->output combinations: " + market.getJobOutputs() + "\n" +
+                        "\nThe market has these prices: " + market.getPrices() +
+                        "\nThe market has agents referred to by the following IDs: \n" + agentIDs);
+
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        displayPanel.add(marketPropertiesDisplayButton).padRight(10);
+
+        return displayPanel;
 
 
-
-        return bottomRow;
     }
 
     @Override

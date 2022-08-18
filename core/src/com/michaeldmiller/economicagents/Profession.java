@@ -60,6 +60,8 @@ public class Profession {
 
     public String toString() {
         return (this.getJob() + ", skill level: " +
-                this.getSkillLevel());
+                this.getSkillLevel() + ", " +
+                String.format("base production %.2f", this.getBaseProduction()) + ", " +
+                String.format("price elasticity of supply %.2f", this.getPriceElasticityOfSupply()));
     }
 }

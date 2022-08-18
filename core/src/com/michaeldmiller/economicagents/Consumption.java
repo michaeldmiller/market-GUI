@@ -80,14 +80,15 @@ public class Consumption {
     }
     */
     public String toString() {
-        return ("Tick Consumption: " + this.getTickConsumption() + ", " +
-                "Total Unmet Need: " + this.getTotalUnmetNeed() + ", " +
-                "Unmet Needs: " + this.getUnmetNeeds()
+        return ("\n" + String.format("tick consumption: %.2f", this.getTickConsumption()) + ", " +
+                String.format("total unmet need: %.2f", this.getTotalUnmetNeed())
+
                 /*
-                + ", " + "Socioeconomic Status: " + this.getStatus() + ", " +
-                "Demand function slope: " + this.getSlope() + ", " +
-                "offset: " + this.getOffset() + ", " +
-                "intercept: " + this.getIntercept()
+                + "Unmet Needs: " + this.getUnmetNeeds()
+                + ", " + "Socioeconomic Status: " + this.getStatus() + ", "
+                + "Demand function slope: " + this.getSlope() + ", "
+                + "offset: " + this.getOffset() + ", "
+                + "intercept: " + this.getIntercept()
                 */
         );
     }

@@ -84,9 +84,9 @@ public class Agent {
         return ("\n\n" + "ID: " + this.getId() + ",\n" +
                 "Inventory: " + this.getInventory() + ",\n" +
                 "Priorities: " + this.getPriorities() + ",\n" +
-                "Consumption: " + this.getConsumption() + ",\n" +
-                "Profession: " + this.getProfession() + ",\n" +
-                "Money: " + this.getMoney() + ",\n" +
-                "Satisfaction: " + this.getSatisfaction() + ".");
+                "\nConsumption: " + this.getConsumption() + ",\n" +
+                "\nProfession: " + this.getProfession() + ",\n" +
+                String.format("\nMoney %.2f", this.getMoney()) + ",\n" +
+                String.format("\nSatisfaction %.2f", this.getSatisfaction()) + ".");
     }
 }
