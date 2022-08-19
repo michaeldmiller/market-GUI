@@ -7,6 +7,7 @@ import com.michaeldmiller.economicagents.Agent;
 import com.michaeldmiller.economicagents.Consumption;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class TotalUnmetNeedsGraph extends ScrollingGraph{
@@ -35,13 +36,21 @@ public class TotalUnmetNeedsGraph extends ScrollingGraph{
             }
         }
         // set doubles to integers
-        HashMap<String, Integer> professionCoordinates = new HashMap<String, Integer>();
+        HashMap<String, Integer> unmetNeedCoordinates = new HashMap<>();
         for (Map.Entry<String, Double> unmetEntryTotal : unmetNeedTotal.entrySet()){
             int coordinateValue = (int) (unmetEntryTotal.getValue() * (this.getScale()));
-            professionCoordinates.put(unmetEntryTotal.getKey(), coordinateValue);
+            unmetNeedCoordinates.put(unmetEntryTotal.getKey(), coordinateValue);
         }
 
-        this.setDataCoordinates(professionCoordinates);
+        this.setDataCoordinates(unmetNeedCoordinates);
+        // remove over height data points
+        for (Iterator<Map.Entry<String, Integer>> iterator = unmetNeedCoordinates.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (entry.getValue() > this.getHeight()){
+                iterator.remove();
+            }
+
+        }
         this.graphData();
         this.removeGraphDots(this.getX(), this.getDots());
         this.removeGraphLabels(this.getX(), this.getLabels());

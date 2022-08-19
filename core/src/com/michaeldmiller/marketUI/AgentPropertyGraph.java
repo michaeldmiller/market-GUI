@@ -7,6 +7,7 @@ import com.michaeldmiller.economicagents.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import static com.michaeldmiller.economicagents.MarketMain.makeAgents;
@@ -97,6 +98,14 @@ public class AgentPropertyGraph extends ScrollingGraph{
          */
 
         this.setDataCoordinates(agentDataCoordinates);
+        // remove over height data points
+        for (Iterator<Map.Entry<String, Integer>> iterator = agentDataCoordinates.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (entry.getValue() > this.getHeight()){
+                iterator.remove();
+            }
+
+        }
         this.graphData();
         this.removeGraphDots(this.getX(), this.getDots());
         this.removeGraphLabels(this.getX(), this.getLabels());

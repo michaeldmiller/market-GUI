@@ -8,6 +8,7 @@ import com.michaeldmiller.economicagents.MarketInfo;
 import com.michaeldmiller.economicagents.Priority;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class PriorityGraph extends ScrollingGraph{
@@ -43,6 +44,14 @@ public class PriorityGraph extends ScrollingGraph{
         }
 
         this.setDataCoordinates(priorityDataCoordinates);
+        // remove over height data points
+        for (Iterator<Map.Entry<String, Integer>> iterator = priorityDataCoordinates.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (entry.getValue() > this.getHeight()){
+                iterator.remove();
+            }
+
+        }
         this.graphData();
         this.removeGraphDots(this.getX(), this.getDots());
         this.removeGraphLabels(this.getX(), this.getLabels());

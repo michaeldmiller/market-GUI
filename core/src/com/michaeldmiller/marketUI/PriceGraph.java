@@ -6,6 +6,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.michaeldmiller.economicagents.Price;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class PriceGraph extends ScrollingGraph{
     public PriceGraph(int x, int y, int width, int height, int worldWidth, int worldHeight, double scale, String title,
@@ -23,6 +25,14 @@ public class PriceGraph extends ScrollingGraph{
             priceCoordinates.put(p.getGood(), (int) (p.getCost() * (this.getScale())));
         }
         this.setDataCoordinates(priceCoordinates);
+        // remove over height data points
+        for (Iterator<Map.Entry<String, Integer>> iterator = priceCoordinates.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (entry.getValue() > this.getHeight()){
+                iterator.remove();
+            }
+
+        }
         this.graphData();
         this.removeGraphDots(this.getX(), this.getDots());
         this.removeGraphLabels(this.getX(), this.getLabels());

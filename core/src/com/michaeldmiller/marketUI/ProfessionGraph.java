@@ -7,6 +7,7 @@ import com.michaeldmiller.economicagents.Agent;
 import com.michaeldmiller.economicagents.JobOutput;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class ProfessionGraph extends ScrollingGraph{
@@ -43,6 +44,14 @@ public class ProfessionGraph extends ScrollingGraph{
             }
         }
         this.setDataCoordinates(professionCoordinates);
+        // remove over height data points
+        for (Iterator<Map.Entry<String, Integer>> iterator = professionCoordinates.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (entry.getValue() > this.getHeight()){
+                iterator.remove();
+            }
+
+        }
         this.graphData();
         this.removeGraphDots(this.getX(), this.getDots());
         this.removeGraphLabels(this.getX(), this.getLabels());
