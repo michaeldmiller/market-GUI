@@ -29,19 +29,12 @@ public class MarketInterface implements Screen {
     ArrayList<MarketInfo> currentMarketProfile;
     HashMap<String, Color> colorLookup;
     Label moreInfo;
-    Label errorLabel;
-
-    TextField consumptionField;
-    TextField costField;
-    TextField consumptionCostField;
-
     double scale;
     int frame;
     double secondFraction;
     int numberOfAgents;
     ScrollingGraph moneyGraph;
     ScrollingGraph marketInventoryGraph;
-    ScrollingGraph agentPropertyGraph;
     String agentID;
     Drawable infoIcon;
     Drawable infoIconClicked;
@@ -169,86 +162,22 @@ public class MarketInterface implements Screen {
         // as done previously, may be possible.
 
         // information panel: graph selectors and information label
-        Table informationPanel = new Table();
-
-        Table numberOfGraphsSelectionTable = new Table();
-        // create options
-        Label numberOfGraphsPrompt = new Label("Number of Graphs:", firstSkin);
-        numberOfGraphsSelectionTable.add(numberOfGraphsPrompt).padRight(10);
-
-        // create number of graphs selector
-        numberOfGraphsSelector = createNumberOfGraphsSelector();
-        numberOfGraphsSelectionTable.add(numberOfGraphsSelector);
-        informationPanel.add(numberOfGraphsSelectionTable).padTop(5).top();
-        informationPanel.row();
-
-        // type label
-        Label typePromptLabel = new Label("Graph Type", firstSkin);
-        informationPanel.add(typePromptLabel);
-        informationPanel.row();
-
-        // add group for type selectors
-        typeSelectors = new VerticalGroup();
-        informationPanel.add(typeSelectors);
-        informationPanel.row();
-
-        // info box, add information label
-        // create scroll pane
-        infoLabel.setAlignment(Align.top, Align.left);
-        final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
-        informationPanel.add(informationScrollPane).width(250).expandY().top();
-        informationPanel.row();
-
-        // add modifications
-        VerticalGroup modificationsGroup = new VerticalGroup();
-        // add modification selector
-        modificationSelector = new SelectBox<>(firstSkin);
-        Array<String> modificationChoices = new Array<>();
-        modificationChoices.add("Base Consumption");
-        modificationChoices.add("Base Production");
-        modificationChoices.add("Price Elasticity of Demand");
-        modificationChoices.add("Price Elasticity of Supply");
-        modificationChoices.add("Base Cost");
-        modificationSelector.setItems(modificationChoices);
-        modificationsGroup.addActor(modificationSelector);
-        // add agent entry box
-        goodField = new TextField("Good", firstSkin);
-        modificationsGroup.addActor(goodField);
-        // add modification value entry box
-        modificationField = new TextField("New Value", firstSkin);
-        modificationsGroup.addActor(modificationField);
-        // create modification button
-        modificationsGroup.addActor(createModifyButton());
-
-
-        informationPanel.add(modificationsGroup).padTop(5).padBottom(42);
-        informationPanel.row();
-
-
+        Table informationPanel = createInformationPanel();
         masterTable.add(informationPanel).fill().center().top();
 
         // add bottom row
         masterTable.row();
+        // create display panel
         // left align
-        // masterTable.add(createBottomRow()).align(Align.left).top().padLeft(10);
+        // masterTable.add(createDisplayPanel()).align(Align.left).top().padLeft(10);
         // center align
         masterTable.add(createDisplayPanel()).top();
 
         // create change agent area
-        Table changeAgentTable = new Table();
-        Label changeAgentLabel = new Label("Modify Agent ID", firstSkin);
-        changeAgentTable.add(changeAgentLabel);
-        changeAgentTable.row();
-        // modification field and button
-        Table changeAgentModificationTable = new Table();
-        agentField = new TextField("Agent ID", firstSkin);
-        Button changeAgentButton = createChangeAgentButton();
-        changeAgentModificationTable.add(agentField).padRight(10);
-        changeAgentModificationTable.add(changeAgentButton);
-        changeAgentTable.add(changeAgentModificationTable);
-
+        Table changeAgentTable = createChangeAgentTable();
         masterTable.add(changeAgentTable);
 
+        // instantiate the market
         instantiateMarket();
 
     }
@@ -376,6 +305,202 @@ public class MarketInterface implements Screen {
             index++;
         }
 
+    }
+    private Table createInformationPanel(){
+        Table informationPanel = new Table();
+
+        Table numberOfGraphsSelectionTable = new Table();
+        // create options
+        Label numberOfGraphsPrompt = new Label("Number of Graphs:", firstSkin);
+        numberOfGraphsSelectionTable.add(numberOfGraphsPrompt).padRight(5);
+
+        // create number of graphs selector
+        numberOfGraphsSelector = createNumberOfGraphsSelector();
+        numberOfGraphsSelectionTable.add(numberOfGraphsSelector).padRight(5);
+
+        // create number of graphs info button
+        ImageButton numberOfGraphsInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        numberOfGraphsInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Number of Graphs:\n\n" + "Use this selector to determine how many graphs " +
+                        "you would like to have in the main display area of the interface. Changing the number " +
+                        "of graphs will alter the layout of all graphs and redraw them. There are four possible " +
+                        "slots. Slot 1 is in the top left corner, Slot 2 is the in the bottom left corner, " +
+                        "Slot 3 is in the top right corner, and Slot 4 is in the bottom right corner. ");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        numberOfGraphsSelectionTable.add(numberOfGraphsInfoButton);
+        informationPanel.add(numberOfGraphsSelectionTable).padTop(5).top();
+        informationPanel.row();
+
+        // type label
+        Table typePromptLabelTable = new Table();
+        Label typePromptLabel = new Label("Graph Type", firstSkin);
+        typePromptLabelTable.add(typePromptLabel).padLeft(50).padRight(37);
+        // create graph type info button
+        ImageButton graphTypeInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        graphTypeInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Graph Type:\n\n" + "Use these selectors to determine the type of graph you " +
+                        "would like to have in each graph slot in the main display area. There are five graph " +
+                        "types. There are five graph types, as follows:\n\nThe first graph type is of the prices of " +
+                        "each good in the market, which will be stable when the market is in equilibrium.\n\nThe second " +
+                        "graph type is of the total number of agents producing each type of good. These values will " +
+                        "be generally stable but experience small fluctuations when the market is in equilibrium.\n\n" +
+                        "The third graph type is of the current agent, specifically the current weights it experienced " +
+                        "in favor of each good when making its purchasing decision that tick. It also displays a " +
+                        "constant straight line in the middle of the graph. The color of this line corresponds to " +
+                        "the agent's current profession and the good it produces.\n\nThe fourth graph type is of the " +
+                        "total unmet needs for each good accumulated by each agent in the market. This is essentially " +
+                        "how much of each good they remember not being able to consume when they needed to. Agents " +
+                        "will purchase variable quantities of their selected good when they choose to buy something " +
+                        "to attempt to draw down these unmet needs. These cumulative values will be low and stable " +
+                        "when the market is in equilibrium.\n\nThe last graph type is of total good priorities. This shows" +
+                        "the sum of all weights felt by agents in favor of purchasing a particular good that tick. " +
+                        "It is an aggregation of the values displayed at the individual level in the agent graph, and " +
+                        "shows trends in the relative importance of a good in the market.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        typePromptLabelTable.add(graphTypeInfoButton);
+        informationPanel.add(typePromptLabelTable);
+        informationPanel.row();
+
+        // add group for type selectors
+        typeSelectors = new VerticalGroup();
+        informationPanel.add(typeSelectors);
+        informationPanel.row();
+
+        // info box, add information label
+        // create scroll pane
+        infoLabel.setAlignment(Align.top, Align.left);
+        final ScrollPane informationScrollPane = new ScrollPane(infoLabel);
+        informationPanel.add(informationScrollPane).width(250).expandY().top();
+        informationPanel.row();
+
+        // add modifications
+        VerticalGroup modificationsGroup = createModificationsGroup();
+        informationPanel.add(modificationsGroup).padTop(5).padBottom(42);
+        informationPanel.row();
+
+        // return the information panel table
+        return informationPanel;
+    }
+
+    private Table createChangeAgentTable(){
+        Table changeAgentTable = new Table();
+        Table changeAgentLabelTable = new Table();
+        Label changeAgentLabel = new Label("Modify Agent ID", firstSkin);
+        changeAgentLabelTable.add(changeAgentLabel);
+        ImageButton changeAgentInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        changeAgentInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Modify Agent ID:\n\n" + "Enter the ID of an agent to change the focus of " +
+                        "the simulation graph(s) and current agent display button to that agent. When a new " +
+                        "agent is selected, any agent graphs will be redrawn.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        changeAgentLabelTable.add(changeAgentInfoButton).padLeft(5);
+        changeAgentTable.add(changeAgentLabelTable).padBottom(1);
+        changeAgentTable.row();
+        // modification field and button
+        Table changeAgentModificationTable = new Table();
+        agentField = new TextField("Agent ID", firstSkin);
+        Button changeAgentButton = createChangeAgentButton();
+        changeAgentModificationTable.add(agentField).padRight(10);
+        changeAgentModificationTable.add(changeAgentButton);
+        changeAgentTable.add(changeAgentModificationTable).padBottom(4);
+        // return change agent table
+        return changeAgentTable;
+
+    }
+
+    private VerticalGroup createModificationsGroup(){
+        VerticalGroup modificationsGroup = new VerticalGroup();
+        Table modificationsLabelTable = new Table();
+        Label marketModificationsLabel = new Label("Market Modifications", firstSkin);
+        modificationsLabelTable.add(marketModificationsLabel).padRight(5);
+        ImageButton modificationsInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        modificationsInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Market Modifications:\n\n" + "The items below this info button, a selector and " +
+                        "two text entry fields, allow for live modification of the market. To make a modification, " +
+                        "select the modification type in the selector box, enter the the good to which you would " +
+                        "like to apply the modification in the top box, then enter the new value in the lower box. " +
+                        "There are five modifications available, all of which affect a property of a good in the " +
+                        "market.\n\nThe first modification is to the base consumption. Modifying this value for a " +
+                        "particular good will change the per tick consumption of the good for each agent to the new " +
+                        "value. It is useful for quickly and simply bringing the market in and out of equilibrium. " +
+                        "The second modification is to base production. Modifying this value will change the " +
+                        "base production rate for agents producing this good, i.e. changing the base rate from " +
+                        "one to two would double the per tick output of the good for each agent. The third " +
+                        "modification is to the price elasticity of demand. Changing this value for a good " +
+                        "alters each agents base sensitivity to price changes when deciding whether to buy " +
+                        "that good.\n\nThe last two modifications are more likely to have unintended consequences. " +
+                        "The first of those, the fourth modification overall, is price elasticity of supply. " +
+                        "Changing this alters the sensitivity of agents to price when deciding the amount of " +
+                        "a good they want to produce. As all agents currently can only produce the maximum amount " +
+                        "possible every tick (fractional production capacity tended to interfere with finding long run " +
+                        "production equilibrium), changing this value does not make sense in the context of the " +
+                        "market. However, it can be used to change the value of price equilibrium without affecting " +
+                        "consumption. The second of these modifications likely to have unintended consequences, the " +
+                        "fifth modification overall, is base cost. This modification essentially applies an outside " +
+                        "weight to the importance of a good in a market. It is usually set to ten, to improve scaling " +
+                        "and make differences more visible in graphing and is best used to change the graphing scale " +
+                        "on the fly, if detail is being lost because of values being to large or too small to see. " +
+                        "If the values are set unequally for the goods, however, agents will habitually prefer " +
+                        "the good or goods that have the higher base costs, without logical explanation within the " +
+                        "market. This greatly inhibits or outright prevents the simulation from finding a stable " +
+                        "price and production equilibrium that is suitable for all agents. ");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        modificationsLabelTable.add(modificationsInfoButton);
+        modificationsGroup.addActor(modificationsLabelTable);
+
+        // add modification selector
+        modificationSelector = new SelectBox<>(firstSkin);
+        Array<String> modificationChoices = new Array<>();
+        modificationChoices.add("Base Consumption");
+        modificationChoices.add("Base Production");
+        modificationChoices.add("Price Elasticity of Demand");
+        modificationChoices.add("Price Elasticity of Supply");
+        modificationChoices.add("Base Cost");
+        modificationSelector.setItems(modificationChoices);
+        modificationsGroup.addActor(modificationSelector);
+        // add good and new value entry fields
+        goodField = new TextField("Good", firstSkin);
+        modificationsGroup.addActor(goodField);
+        // add modification value entry box
+        modificationField = new TextField("New Value", firstSkin);
+        modificationsGroup.addActor(modificationField);
+        // create modification button
+        modificationsGroup.addActor(createModifyButton());
+
+        // return modifications group
+        return modificationsGroup;
     }
 
     private Button createPauseResumeButton(){
@@ -624,47 +749,6 @@ public class MarketInterface implements Screen {
         return modifyButton;
     }
 
-    // UI Instantiation
-    public void addButtons(){
-        Button menuButton = new TextButton("Menu", firstSkin);
-        menuButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - marketUI.standardButtonHeight);
-        menuButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        menuButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                marketUI.setScreen(marketUI.mainMenu);
-                dispose();
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(menuButton);
-
-        Button printButton = new TextButton("Print", firstSkin);
-        printButton.setPosition(marketUI.worldWidth - marketUI.standardButtonWidth,
-                marketUI.worldHeight - 2* marketUI.standardButtonHeight);
-        printButton.setSize(marketUI.standardButtonWidth, marketUI.standardButtonHeight);
-        printButton.addListener(new InputListener(){
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
-                // System.out.println(priceGraph.getDots().size());
-                // for (Agent a : market.getAgents()){
-                //     System.out.println(a.getConsumption());
-                // }
-                System.out.println(market.getMarketProfile());
-            }
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
-                return true;
-            }
-        });
-        stage.addActor(printButton);
-
-    }
-
     // Market instantiation
     public void instantiateMarket(){
         // create agents
@@ -679,30 +763,6 @@ public class MarketInterface implements Screen {
     }
 
     // modifier functions
-    public void changePrice(){
-        // given information in good and cost text fields, attempt to change the corresponding cost in the market
-        boolean costOK = false;
-        int costValue = 0;
-        String good = goodField.getText();
-        String cost = costField.getText();
-
-        // make sure the user entered value is an integer
-        try{
-            costValue = Integer.parseInt(cost);
-            costOK = true;
-        } catch (NumberFormatException e){
-            errorLabel.setText("Not a valid cost!");
-        }
-        // if value is ok, check goods for match and assign cost
-        if (costOK){
-            for (Price p : market.getPrices()){
-                if (p.getGood().equals(good)){
-                    p.setOriginalCost(costValue);
-                }
-            }
-        }
-    }
-
     private void changeConsumption(String good, double consumptionValue){
         // change the value in the market profile
         for (MarketInfo marketInfo : market.getMarketProfile()){
@@ -886,7 +946,6 @@ public class MarketInterface implements Screen {
         marketInventoryGraph.removeGraphLabels(marketInventoryGraph.getX(), marketInventoryGraph.getLabels());
     }
 
-
     public Button createInstructions(){
         // create instruction button
         Button instructionsButton = new TextButton(" Instructions ", firstSkin);
@@ -894,20 +953,25 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Instructions:\n" + "Welcome to the MarketUI! MarketUI dynamically simulates " +
-                        "a virtual marketplace with autonomous agents, which produce and consume goods and then buy " +
-                        "and sell them to one another according to basic real world motivations of needs and a " +
-                        "desire for profit. Governed by the real laws of microeconomics through supply and demand " +
-                        "forces, MarketUI demonstrates the power of simple rules to create emergent behaviors akin " +
-                        "to those found in the real world.\n" +
-                        "This is the creation screen for the virtual market to be simulated. A market consists of a " +
-                        "number of agents (button on the bottom of your screen) working with a number of goods. " +
-                        "Click on the add good button, towards the middle of your screen, to add at least one good. " +
-                        "When you do this, several boxes will appear with space to provide specific information " +
-                        "about that good. Click on the information boxes associated with each to learn more about "+
-                        "them. When you are done, click the create button in the bottom right to create the market " +
-                        "and begin simulating it. Alternatively, click on a preset to use a prebuilt market and begin " +
-                        "simulating right away. Thank you for using MarketUI!");
+                infoLabel.setText("Instructions:\n\n" +
+                        "This is the market interface screen for the virtual market to be simulated. Having created " +
+                        "a graph on the previous screen, or selected a preset, all the information is now available " +
+                        "to begin your simulation!\n\nThe simulation begins paused, this is controlled by the pause/resume " +
+                        "button at the top of your screen next to the instructions and menu buttons. Before beginning, " +
+                        "the simulation by clicking resume, go to the number of graphs selector just below the menu " +
+                        "button and select how many graphs you would like to display, and the type of those graphs. " +
+                        "Further details about this can be found by clicking their information buttons. After you are " +
+                        "satisfied, click resume to start the simulation. You can click this button again at any time " +
+                        "to pause the simulation.\n\nDuring the simulation, if you would like to know more about a " +
+                        "particular aspect or value in the market, navigate to the display panel at the bottom " +
+                        "of your screen. A variety of different information and attributes about the market " +
+                        "can be displayed with these buttons. More details can be found in the information buttons " +
+                        "in the display panel.\n\nIf you would like to modify something in the market during the" +
+                        "simulation, navigate to the modifications and change agent areas on the bottom right of " +
+                        "your screen. The former allows you to modify several market attributes; instructions on how " +
+                        "to do so can be found in the information button there. Finally, you can change the agent of " +
+                        "focus using the change agent area, instructions to do so are likewise found in that area's " +
+                        "information button. Enjoy your simulation! Thank you for using MarketUI.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -936,7 +1000,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Price Information:\n" + "This displays the full details of the prices " +
+                infoLabel.setText("Price Information:\n\n" + "This displays the full details of the prices " +
                         "currently experienced in the market, including the equilibrium and original " +
                         "cost values used in calculations.");
             }
@@ -958,7 +1022,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Total Producers:\n" + "This displays the total numbers of producers for each " +
+                infoLabel.setText("Total Producers:\n\n" + "This displays the total numbers of producers for each " +
                         "type of good.");
             }
             @Override
@@ -980,7 +1044,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Current Agent Information:\n" + "This displays the properties of the current " +
+                infoLabel.setText("Current Agent Information:\n\n" + "This displays the properties of the current " +
                         "agent. To view a different agent, change the current active agent using the change agent " +
                         "button in the lower right.");
             }
@@ -1002,7 +1066,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Total Unmet Needs:\n" + "This displays the total amount of unmet needs for " +
+                infoLabel.setText("Total Unmet Needs:\n\n" + "This displays the total amount of unmet needs for " +
                         "each good held by the agents in the market. Through its effects on individual price " +
                         "elasticities and the market demand curve, this is a key component in determining the " +
                         "price of each good.");
@@ -1025,7 +1089,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Total Priority Weights:\n" + "This displays the sum of all of the weight values " +
+                infoLabel.setText("Total Priority Weights:\n\n" + "This displays the sum of all of the weight values " +
                         "assigned to each good by each agent in this tick, when the agents were determining which " +
                         "good they would try to buy. These weights informed a weighted choice system that picked" +
                         "the chosen good (i.e. if a the weight was 80 for Good A and 20 for Good B, and Goods A " +
@@ -1051,10 +1115,11 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Market Profile:\n" + "This displays a list of the basic information about " +
+                infoLabel.setText("Market Profile:\n\n" + "This displays a list of the basic information about " +
                         "the goods used currently in the market, particularly things like their base costs, " +
-                        "elasticities, as well as job and profession names. It does not display the entire market, " +
-                        "as this is a huge volume of text which causes a great deal of lag in the simulation.");
+                        "elasticities, job and profession names, as well as a list of Agent IDs. It does not display, " +
+                        "the full details of all the agents in the market, as this is a huge volume of text which " +
+                        "causes a great deal of lag in the simulation.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -1074,7 +1139,7 @@ public class MarketInterface implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 // change information box text to description
-                infoLabel.setText("Market Properties:\n" + "This displays the current inventory, job output combinations," +
+                infoLabel.setText("Market Properties:\n\n" + "This displays the current inventory, job output combinations," +
                         "and prices currently in the market. It does not display the entire market, as this is a " +
                         "huge volume of text which causes a great deal of lag in the simulation.");
             }
