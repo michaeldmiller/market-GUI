@@ -54,7 +54,7 @@ public class MarketInterface implements Screen {
 
 
     public MarketInterface (final MarketUI marketUI, int specifiedNumberOfAgents,
-                          ArrayList<MarketInfo> specifiedMarketProfile) {
+                          HashMap<String, Color> specifiedColorLookup, ArrayList<MarketInfo> specifiedMarketProfile) {
         this.marketUI = marketUI;
         this.isPaused = true;
         this.graphs = new HashMap<>();
@@ -78,6 +78,8 @@ public class MarketInterface implements Screen {
 
         // TODO: Add dynamic color lookup
         // setup color lookup table
+        colorLookup = specifiedColorLookup;
+        /*
         colorLookup = new HashMap<String, Color>();
         colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
         colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
@@ -86,6 +88,8 @@ public class MarketInterface implements Screen {
         colorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
         // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
         colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
+
+         */
 
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
@@ -148,8 +152,9 @@ public class MarketInterface implements Screen {
         // create invisible table to provide size suggestions to the graphs, which are positioned outside
         // the master table directly on the stage.
 
-        Table graphDisplayTable = new Table();
-        masterTable.add(graphDisplayTable).expand();
+        // Table graphDisplayTable = new Table();
+        Table graphDisplayTable = createColorLegend();
+        masterTable.add(graphDisplayTable).padTop(10).expand().right().top();
         // the code is unnecessary, as the graphs are placed using absolute coordinates, but the graphs are placed
         // within a virtual 5x5 table, in (2, 2), (4, 2), (2, 4), and (4, 4). Row and Column 1, 3, and 5, explicitly
         // control the left, center, and right (top, middle, and bottom) padding of the graph cells.
@@ -312,6 +317,58 @@ public class MarketInterface implements Screen {
             index++;
         }
 
+    }
+
+    private Table createColorLegend(){
+        Table colorLegend = new Table();
+        // loop through the color lookup table, for each entry create a graph point with the corresponding color,
+        // and a label containing the color's name. Add each pair to the colorLegend.
+        Label colorLegendTitleLabel = new Label("Color Legend: ", firstSkin);
+        colorLegend.add(colorLegendTitleLabel).padRight(10);
+        int currentNumberOfColors = 1;
+
+        // determine color lookup size
+        boolean hasMarketProperty = false;
+        int colorLookupSize;
+        for (String colorName : colorLookup.keySet()){
+            if (colorName.equals("MarketProperty")){
+                hasMarketProperty = true;
+                break;
+            }
+        }
+        // set size, adjusted for presence of the MarketProperty ignored default color
+        if (hasMarketProperty){
+            colorLookupSize = colorLookup.size() - 1;
+        } else{
+            colorLookupSize = colorLookup.size();
+        }
+
+        for (Map.Entry<String, Color> colorEntry : colorLookup.entrySet()){
+            // check if the entry is for MarketProperty, if so disregard
+            if (!colorEntry.getKey().equals("MarketProperty")){
+                // add color block GraphPoint
+                GraphPoint colorBlock = new GraphPoint(0, 0, 10, 10, colorEntry.getValue());
+                colorLegend.add(colorBlock).padRight(5);
+                // add color name label
+                Label colorName = new Label(colorEntry.getKey(), firstSkin);
+
+                // if this is the last color, pad to the right to match graph size
+                if (currentNumberOfColors == colorLookupSize){
+                    colorLegend.add(colorName).padRight(70);
+                } else{
+                    colorLegend.add(colorName).padRight(10);
+                }
+
+                // make a new row every 10 colors, add a blank cell below the legend label
+                if (currentNumberOfColors % 10 == 0){
+                    colorLegend.row();
+                    colorLegend.add();
+                }
+                currentNumberOfColors++;
+            }
+        }
+
+        return colorLegend;
     }
     private Table createInformationPanel(){
         Table informationPanel = new Table();

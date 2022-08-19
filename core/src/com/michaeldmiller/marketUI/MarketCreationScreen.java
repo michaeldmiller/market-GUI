@@ -2,6 +2,7 @@ package com.michaeldmiller.marketUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.*;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.michaeldmiller.economicagents.MarketInfo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class MarketCreationScreen implements Screen {
@@ -131,6 +133,9 @@ public class MarketCreationScreen implements Screen {
                 StringBuilder errorText = new StringBuilder();
                 errorText.append("Error(s):\n");
                 ArrayList<MarketInfo> marketInfoAccumulation = new ArrayList<>();
+                HashMap<String, Color> proposedColorLookup = new HashMap<>();
+                // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
+                proposedColorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
                 for (Actor actor : marketGoods.getChildren()){
                     // ignore the first two
                     if (!(i <= 1)){
@@ -146,8 +151,12 @@ public class MarketCreationScreen implements Screen {
                         TextField goodField = (TextField) t.getChild(0);
                         String goodName = goodField.getText();
 
+                        @SuppressWarnings("unchecked") SelectBox<String> colorSelector =
+                                (SelectBox<String>) t.getChild(1);
+                        String colorName = colorSelector.getSelected();
+
                         // get the base consumption, reject if it is not a number or less than zero.
-                        TextField consumptionField = (TextField) t.getChild(1);
+                        TextField consumptionField = (TextField) t.getChild(2);
                         double baseConsumption = 0;
                         try{
                             baseConsumption = Double.parseDouble(consumptionField.getText());
@@ -163,7 +172,7 @@ public class MarketCreationScreen implements Screen {
                         }
 
                         // get the base production, reject if it is not a number or less than zero.
-                        TextField productionField = (TextField) t.getChild(2);
+                        TextField productionField = (TextField) t.getChild(3);
                         double baseProduction = 0;
                         try{
                             baseProduction = Double.parseDouble(productionField.getText());
@@ -181,18 +190,18 @@ public class MarketCreationScreen implements Screen {
 
                         // get the elasticities, no checks required here as the slider and selector limit
                         // the possible user inputs
-                        // index 3 is the label for the slider, skip to 4
-                        Slider demandElasticitySlider = (Slider) t.getChild(4);
+                        // index 4 is the label for the slider, skip to 5
+                        Slider demandElasticitySlider = (Slider) t.getChild(5);
                         double demandElasticity = demandElasticitySlider.getValue();
 
 
-                        // despite complaints, the value at index 5 is in fact a select box of integers
+                        // despite complaints, the value at index 6 is in fact a select box of integers
                         @SuppressWarnings("unchecked") SelectBox<Integer> supplyElasticityBox =
-                                (SelectBox<Integer>) t.getChild(5);
+                                (SelectBox<Integer>) t.getChild(6);
                         double supplyElasticity = supplyElasticityBox.getSelected();
 
                         // get the base cost, reject if it is not a number or less than zero.
-                        TextField baseCostField = (TextField) t.getChild(6);
+                        TextField baseCostField = (TextField) t.getChild(7);
                         double baseCost = 0;
                         try{
                             baseCost = Double.parseDouble(baseCostField.getText());
@@ -210,18 +219,18 @@ public class MarketCreationScreen implements Screen {
 
                         // get the base weight, no check required due to the select box limit on the possible
                         // user inputs
-                        // despite complaints, the value at index 7 is in fact a select box of integers
+                        // despite complaints, the value at index 8 is in fact a select box of integers
                         @SuppressWarnings("unchecked") SelectBox<Integer> baseWeightBox =
-                                (SelectBox<Integer>) t.getChild(7);
+                                (SelectBox<Integer>) t.getChild(8);
                         double baseWeight = supplyElasticityBox.getSelected();
 
                         // get the job name
-                        TextField jobNameField = (TextField) t.getChild(8);
+                        TextField jobNameField = (TextField) t.getChild(9);
                         String jobName = jobNameField.getText();
 
                         // get the job chance, slider ensures all values are valid
-                        // skip index 9, as it is occupied by the label for the job chance
-                        Slider jobChanceSlider = (Slider) t.getChild(10);
+                        // skip index 10, as it is occupied by the label for the job chance
+                        Slider jobChanceSlider = (Slider) t.getChild(11);
                         double jobChance = jobChanceSlider.getValue();
 
                         // with reasonable values, create a market info object for the good
@@ -230,6 +239,30 @@ public class MarketCreationScreen implements Screen {
                                 jobName, jobChance);
                         marketInfoAccumulation.add(marketInfo);
 
+                        // lookup color and add to proposed color lookup
+                        Color proposedGoodColor = new Color(0, 0, 0, 1);
+                        if (colorName.equals("Red")){
+                            proposedGoodColor = new Color(0.7f, 0.7f, 0.7f, 1);
+                        } else if (colorName.equals("Green")){
+                            proposedGoodColor = new Color(0, 0.7f, 0, 1);
+                        } else if (colorName.equals("Blue")){
+                            proposedGoodColor = new Color(0, 0, 0.7f, 1);
+                        } else if (colorName.equals("Yellow")){
+                            proposedGoodColor = new Color(0.7f, 0.7f, 0, 1);
+                        } else if (colorName.equals("Grey")){
+                            proposedGoodColor = new Color(0.7f, 0.7f, 0.7f, 1);
+                        } else if (colorName.equals("Pink")){
+                            proposedGoodColor = new Color(1, 0.7f, 0.7f, 1);
+                        } else if (colorName.equals("Cyan")){
+                            proposedGoodColor = new Color(0, 0.7f, 0.7f, 1);
+                        } else if (colorName.equals("Orange")){
+                            proposedGoodColor = new Color(0.7f, 0.35f, 0, 1);
+                        } else if (colorName.equals("Neon")){
+                            proposedGoodColor = new Color(0.2f, 1, 0.2f, 1);
+                        } else if (colorName.equals("Brown")){
+                            proposedGoodColor = new Color(0.3f, 0.2f, 0, 1);
+                        }
+                        proposedColorLookup.put(goodName, proposedGoodColor);
 
                     }
                     // increment counter
@@ -304,7 +337,7 @@ public class MarketCreationScreen implements Screen {
                     // set the market information
                     currentMarketProfile = marketInfoAccumulation;
                     // create a new main interface screen using the new market profile
-                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, currentMarketProfile);
+                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, proposedColorLookup, currentMarketProfile);
                     // if a market did not exist before, refresh the main menu to include an enabled resume button
                     if (!marketUI.marketExists){
                         marketUI.marketExists = true;
@@ -473,11 +506,21 @@ public class MarketCreationScreen implements Screen {
                     errorText.append("The number of agents must be positive.\n");
                 }
 
+                // setup color lookup table
+                HashMap<String, Color> colorLookup = new HashMap<String, Color>();
+                colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
+                colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
+                colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
+                colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
+                colorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
+                // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
+                colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
+
                 // if there were no errors (i.e. the error text is still its initial value), create the market,
                 // otherwise, set the information box to show the encountered error
                 if(errorText.toString().equals("Error(s):\n")){
                     // create a new main interface screen using the new market profile
-                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, currentMarketProfile);
+                    marketUI.marketInterface = new MarketInterface(marketUI, numberOfAgents, colorLookup, currentMarketProfile);
                     // if a market did not exist before, refresh the main menu to include an enabled resume button
                     if (!marketUI.marketExists){
                         marketUI.marketExists = true;
@@ -509,7 +552,7 @@ public class MarketCreationScreen implements Screen {
 
         // good name label
         Label name = new Label ("Good Name", firstSkin);
-        labels.add(name).padLeft(35).padRight(5);
+        labels.add(name).padLeft(15).padRight(5);
         // info button
         ImageButton nameInfoButton = new ImageButton(infoIcon, infoIconClicked);
         nameInfoButton.addListener(new InputListener(){
@@ -523,7 +566,26 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(nameInfoButton).padRight(30);
+        labels.add(nameInfoButton).padRight(25);
+
+        // graph color label
+        Label color = new Label ("Color", firstSkin);
+        labels.add(color).padRight(5);
+        // info button
+        ImageButton colorInfoButton = new ImageButton(infoIcon, infoIconClicked);
+        colorInfoButton.addListener(new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                // change information box text to description
+                infoLabel.setText("Color:\n" + "This is the color that will represent this good on graphs " +
+                        "in the market interface.");
+            }
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+        });
+        labels.add(colorInfoButton).padRight(10);
 
 
         // good consumption label
@@ -609,7 +671,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(priceElasticityInfoButton).padRight(100);
+        labels.add(priceElasticityInfoButton).padRight(80);
 
         // good base cost label
         Label baseValues = new Label ("Base Values", firstSkin);
@@ -638,7 +700,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(baseValuesInfoButton).padRight(75);
+        labels.add(baseValuesInfoButton).padRight(50);
 
         // good job name label
         Label jobName = new Label ("Job Name", firstSkin);
@@ -682,7 +744,7 @@ public class MarketCreationScreen implements Screen {
                 return true;
             }
         });
-        labels.add(chanceInfoButton).padRight(120);
+        labels.add(chanceInfoButton).padRight(110);
 
 
         return labels;
@@ -693,8 +755,24 @@ public class MarketCreationScreen implements Screen {
         Table good = new Table();
 
         // get good name
-        TextField goodName = new TextField("Good", firstSkin);
-        good.add(goodName).padRight(10);
+        TextField goodName = new TextField("Good Name", firstSkin);
+        good.add(goodName).width(125).padRight(10);
+
+        // get color
+        SelectBox<String> colorSelector = new SelectBox<>(firstSkin);
+        Array<String> colorChoices = new Array<>();
+        colorChoices.add("Red");
+        colorChoices.add("Green");
+        colorChoices.add("Blue");
+        colorChoices.add("Yellow");
+        colorChoices.add("Grey");
+        colorChoices.add("Pink");
+        colorChoices.add("Cyan");
+        colorChoices.add("Orange");
+        colorChoices.add("Neon");
+        colorChoices.add("Brown");
+        colorSelector.setItems(colorChoices);
+        good.add(colorSelector).padRight(10);
 
         // get baseConsumption
         TextField baseConsumption = new TextField("Base Consumption", firstSkin);
@@ -735,7 +813,7 @@ public class MarketCreationScreen implements Screen {
 
         // get good base cost multiplier
         TextField baseCost = new TextField("Base Cost", firstSkin);
-        good.add(baseCost).padRight(10);
+        good.add(baseCost).width(125).padRight(10);
 
         // get base good weight
         SelectBox<Integer> baseWeight = new SelectBox<>(firstSkin);
@@ -746,7 +824,7 @@ public class MarketCreationScreen implements Screen {
 
         // get job name
         TextField jobName = new TextField("Job Name", firstSkin);
-        good.add(jobName).padRight(10);
+        good.add(jobName).width(125).padRight(10);
 
         // get job chance (between 0 and 1)
         final Label jobChanceLabel = new Label("0.00", firstSkin);
