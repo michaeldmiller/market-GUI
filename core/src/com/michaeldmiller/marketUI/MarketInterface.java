@@ -262,7 +262,7 @@ public class MarketInterface implements Screen {
 
         } else if (graphType.equals("Agent")){
             AgentPropertyGraph agentGraph = new AgentPropertyGraph(xCoordinate, yCoordinate, width, height,
-                    marketUI.worldWidth, marketUI.worldHeight, 0.005, "Agent: " + agentID,
+                    marketUI.worldWidth, marketUI.worldHeight, scale * 2, "Agent: " + agentID,
                     new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
             agentGraph.makeGraph();
             graphs.put(index, agentGraph);
@@ -273,6 +273,13 @@ public class MarketInterface implements Screen {
                     new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
             totalUnmetNeedsGraph.makeGraph();
             graphs.put(index, totalUnmetNeedsGraph);
+
+        } else if (graphType.equals("Priorities")){
+            PriorityGraph totalGoodPurchasePriorityGraph = new PriorityGraph(xCoordinate, yCoordinate, width, height,
+                    marketUI.worldWidth, marketUI.worldHeight, 0.001, "Total Purchase Priorities",
+                    new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
+            totalGoodPurchasePriorityGraph.makeGraph();
+            graphs.put(index, totalGoodPurchasePriorityGraph);
 
         }
 
@@ -363,10 +370,10 @@ public class MarketInterface implements Screen {
                         "how much of each good they remember not being able to consume when they needed to. Agents " +
                         "will purchase variable quantities of their selected good when they choose to buy something " +
                         "to attempt to draw down these unmet needs. These cumulative values will be low and stable " +
-                        "when the market is in equilibrium.\n\nThe last graph type is of total good priorities. This shows" +
-                        "the sum of all weights felt by agents in favor of purchasing a particular good that tick. " +
-                        "It is an aggregation of the values displayed at the individual level in the agent graph, and " +
-                        "shows trends in the relative importance of a good in the market.");
+                        "when the market is in equilibrium.\n\nThe last graph type is of total good purchase priorities. " +
+                        "This shows the sum of all weights felt by agents in favor of purchasing a particular good " +
+                        "that tick. It is an aggregation of the values displayed at the individual level in the agent " +
+                        "graph, and shows trends in the relative importance of a good in the market.");
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
@@ -588,6 +595,7 @@ public class MarketInterface implements Screen {
                         graphTypes.add("Producers");
                         graphTypes.add("Agent");
                         graphTypes.add("Unmet Needs");
+                        graphTypes.add("Priorities");
                         graphTypeSelector.setItems(graphTypes);
 
                         // create table
