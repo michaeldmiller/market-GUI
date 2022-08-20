@@ -244,7 +244,7 @@ public class MarketCreationScreen implements Screen {
                         // lookup color and add to proposed color lookup
                         Color proposedGoodColor = new Color(0, 0, 0, 1);
                         if (colorName.equals("Red")){
-                            proposedGoodColor = new Color(0.7f, 0.7f, 0.7f, 1);
+                            proposedGoodColor = new Color(0.7f, 0, 0, 1);
                         } else if (colorName.equals("Green")){
                             proposedGoodColor = new Color(0, 0.7f, 0, 1);
                         } else if (colorName.equals("Blue")){
