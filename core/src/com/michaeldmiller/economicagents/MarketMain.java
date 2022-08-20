@@ -467,7 +467,8 @@ public class MarketMain {
         // pick a random number between 2 and the number of agents
         int numberOfAgents = m.getAgents().size();
         Random random = new Random();
-        int pick = random.nextInt(0, numberOfAgents - 1);
+        // Range of zero to agents size (exclusive) gives the indices of agent 1 (0) through agent n (n - 1)
+        int pick = random.nextInt(numberOfAgents);
         // with pick in hand, use two standard for loops, looping from the pick to the end, and then
         // from the first agent to the pick.
         for (int firstCounter = pick; firstCounter < numberOfAgents; firstCounter++){
