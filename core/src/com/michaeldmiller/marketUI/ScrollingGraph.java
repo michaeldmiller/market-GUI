@@ -216,11 +216,11 @@ public class ScrollingGraph extends Actor {
         stage.addActor(yCeiling);
         // add title
         graphTitle = new Label(title, new Label.LabelStyle(
-                new BitmapFont(Gdx.files.internal("franklin-medium.fnt")),
+                new BitmapFont(Gdx.files.internal("palatino-linotype-bold.fnt")),
                 new Color (0.7f, 0.7f, 0.7f, 1)));
         graphTitle.setAlignment(Align.center);
         graphTitle.setPosition(((int) (x + (width / 2))) - (int) (graphTitle.getWidth() / 2),
-                (int) (y + height - ((0.045 * height) * (worldHeight/height))));
+                (int) (y + height - ((0.055 * height) * (worldHeight/height))));
         // graphTitle.setFontScale(2);
         otherComponents.add(graphTitle);
         stage.addActor(graphTitle);

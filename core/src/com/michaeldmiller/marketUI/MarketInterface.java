@@ -76,20 +76,8 @@ public class MarketInterface implements Screen {
         Texture infoIconClickedTexture = new Texture(Gdx.files.internal("info-button-icon-clicked-26.png"));
         infoIconClicked = new TextureRegionDrawable(new TextureRegion(infoIconClickedTexture));
 
-        // TODO: Add dynamic color lookup
         // setup color lookup table
         colorLookup = specifiedColorLookup;
-        /*
-        colorLookup = new HashMap<String, Color>();
-        colorLookup.put("Fish", new Color(0, 0, 0.7f, 1));
-        colorLookup.put("Lumber", new Color(0, 0.7f, 0, 1));
-        colorLookup.put("Grain", new Color(0.7f, 0.7f, 0, 1));
-        colorLookup.put("Metal", new Color(0.7f, 0.7f, 0.7f, 1));
-        colorLookup.put("Brick", new Color(0.7f, 0, 0, 1));
-        // MarketProperty is a reserved good name, used for graphing data which corresponds to the market, not a good
-        colorLookup.put("MarketProperty", new Color(0.2f, 0.2f, 0.2f, 1));
-
-         */
 
         stage = new Stage(new FitViewport(marketUI.worldWidth, marketUI.worldHeight));
 
@@ -103,8 +91,10 @@ public class MarketInterface implements Screen {
         // enable debugging for design purposes
         // masterTable.setDebug(true);
 
-        // create labels
-        Label title = new Label("Market Interface", firstSkin);
+        // create screen image label
+        Texture marketInterfaceLabelTexture = new Texture(Gdx.files.internal("MarketInterfaceTitle.png"));
+        Drawable marketInterfaceLabelDrawable = new TextureRegionDrawable(new TextureRegion(marketInterfaceLabelTexture));
+        Image title = new Image(marketInterfaceLabelDrawable);
 
         // information label, wrap is true for multiple information lines
         infoLabel = new Label("------------Information------------", firstSkin);
@@ -260,7 +250,7 @@ public class MarketInterface implements Screen {
 
         } else if (graphType.equals("Producers")){
             ProfessionGraph professionGraph = new ProfessionGraph(xCoordinate, yCoordinate, width, height,
-            marketUI.worldWidth, marketUI.worldHeight, 500.0 / numberOfAgents, "# of Producers",
+            marketUI.worldWidth, marketUI.worldHeight, 500.0 / numberOfAgents, "Number of Producers",
                     new HashMap<String, Integer>(), colorLookup, firstSkin, frame, stage, true);
             professionGraph.makeGraph();
             graphs.put(index, professionGraph);

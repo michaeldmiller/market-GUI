@@ -53,8 +53,10 @@ public class MarketCreationScreen implements Screen {
         // enable debugging for design purposes
         // masterTable.setDebug(true);
 
-        // create labels
-        Label title = new Label("Market Creator", firstSkin);
+        // create screen image label
+        Texture marketCreatorLabelTexture = new Texture(Gdx.files.internal("MarketCreatorTitle.png"));
+        Drawable marketCreatorLabelDrawable = new TextureRegionDrawable(new TextureRegion(marketCreatorLabelTexture));
+        Image title = new Image(marketCreatorLabelDrawable);
 
         // information label, wrap is true for multiple information lines
         infoLabel = new Label("------------Information------------", firstSkin);
@@ -76,7 +78,7 @@ public class MarketCreationScreen implements Screen {
 
         // add the title and button to the first row
         Table titleInstructions = new Table();
-        titleInstructions.add(title).padLeft(50);
+        titleInstructions.add(title).padLeft(70);
         titleInstructions.add().expand();
         titleInstructions.add(createInstructions());
         masterTable.add(titleInstructions).align(Align.left).fill();
