@@ -15,14 +15,14 @@ to explore and analyze the properties of your virtual market.
 
 Here is a walkthrough of a sample simulation in Market Simulator:
 
-<img src='https://i.imgur.com/maUBRBD.gifv' title='Simulation Walkthrough' width='1596px' alt='Simulation Walkthrough' />
+<img src='https://i.imgur.com/maUBRBD' title='Simulation Walkthrough' width='1596px' alt='Simulation Walkthrough' />
 
 Link here if your browser will not load the file:
 https://i.imgur.com/maUBRBD.gif
 
 Additionally, here is a walkthrough of the custom market creator:
 
-<img src='https://imgur.com/gkpkR4w.gifv' title='Creation Walkthrough' width='1596px' alt='Creation Walkthrough' />
+<img src='https://imgur.com/gkpkR4w' title='Creation Walkthrough' width='1596px' alt='Creation Walkthrough' />
 
 Link here if your browser will not load the file:
 https://imgur.com/gkpkR4w.gif
